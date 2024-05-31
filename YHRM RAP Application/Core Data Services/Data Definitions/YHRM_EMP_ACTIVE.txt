@@ -1,0 +1,8 @@
+@EndUserText.label: 'Employee Active Status entity'
+@Metadata.allowExtensions: true
+define abstract entity YHRM_EMP_ACTIVE
+//  with parameters parameter_name : parameter_type
+{
+    @UI.defaultValue: #( 'ELEMENT_OF_REFERENCED_ENTITY: Active' )
+    active                : abap_boolean;  
+}
