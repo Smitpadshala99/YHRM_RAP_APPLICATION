@@ -1,0 +1,21 @@
+@EndUserText.label: 'Projection view of Timesheet CDS'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+define view entity YHRM_U_TIMESHEET_PROJ as projection on YHRM_U_TIMESHEET
+{
+    key Empid,
+    key Ydate,
+    Available,
+    Workinghours,
+    Leavetype,
+    OvertimeHrs,
+    ApprovedBy,
+    created_by,
+    created_at,
+    last_changed_by,
+    local_last_changed_by,
+    LocalLastChangedAt,
+    LastChangedAt,
+    /* Associations */
+    _Employee : redirected to parent YHRM_U_EMPLOYEE_PROJ,
+    _LeaveType
+}

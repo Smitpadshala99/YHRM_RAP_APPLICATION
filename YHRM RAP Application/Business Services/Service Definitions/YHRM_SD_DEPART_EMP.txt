@@ -1,0 +1,11 @@
+@EndUserText.label: 'Service Definition Department & Employee'
+define service YHRM_SD_Depart_Emp {
+  expose YHRM_DEPART_PROJECTION as DepartmentProj;
+  expose YHRM_EMP_PROJECTION    as EmployeeProj;
+  expose YHRM_M_ADDRESS         as Address;
+  expose YHRM_M_JOB             as Job;
+  expose yhrm_m_Supervisor      as Supervisor;
+  expose YHRM_M_TIMESHEET       as Timesheet;
+  expose YHRM_M_DEPARTMENT      as Department;
+  expose YHRM_M_EMPLOYEE        as Employee;
+}

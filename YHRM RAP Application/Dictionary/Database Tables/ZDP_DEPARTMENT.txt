@@ -1,0 +1,13 @@
+@EndUserText.label : 'Department table'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table zdp_department {
+
+  key client       : abap.clnt not null;
+  key department   : zdp_dtel_department not null;
+  deptname         : abap.char(20);
+  headofdepartment : abap.char(20);
+
+}

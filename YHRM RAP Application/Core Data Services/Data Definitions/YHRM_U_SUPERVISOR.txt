@@ -1,0 +1,33 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Superviosr master data'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity YHRM_U_SUPERVISOR as select from yhrm_employee
+association[0..*] to yhrm_U_EMPLOYEE as _Employee on
+$projection.SupervisorId = _Employee.SupervisorId
+{
+    key emp_id as EmpId,
+    concat(concat(first_name, ' '), last_name) as EmployeeName,
+    email as Email,
+    phone_no as PhoneNo,
+    job_id as JobId,
+    department_id as DepartmentId,
+    supervisor_id as SupervisorId,
+    @Semantics.user.createdBy: true
+    created_by,
+    @Semantics.systemDateTime.createdAt: true
+    created_at,
+    @Semantics.user.lastChangedBy: true
+    last_changed_by,   
+    @Semantics.user.localInstanceLastChangedBy: true  
+    local_last_changed_by, 
+    @Semantics.systemDateTime.localInstanceLastChangedAt: true
+    local_last_changed_at,
+    @Semantics.systemDateTime.lastChangedAt: true
+    last_changed_at
+}

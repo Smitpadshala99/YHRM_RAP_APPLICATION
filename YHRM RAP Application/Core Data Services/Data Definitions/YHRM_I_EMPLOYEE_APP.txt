@@ -1,0 +1,35 @@
+@AccessControl.authorizationCheck: #CHECK
+@EndUserText.label: 'Employee Transactional App'
+define root view entity YHRM_I_EMPLOYEE_APP as select from yhrm_employee
+{
+    key emp_id as EmpId,
+    concat(first_name,  last_name ) as EmployeeName,
+//    concat_with_space( first_name,last_name,1) as EmployeeName,
+    first_name as FirstName,
+    last_name as LastName,
+    email as Email,
+    phone_no as PhoneNo,
+    dob as Dob,
+    gender as Gender,
+    salary as Salary,
+    hire_date as HireDate,
+    active as Active,
+    resign_date as ResignDate,
+    address_id as AddressId,
+    job_id as JobId,
+    department_id as DepartmentId,
+    supervisor_id as SupervisorId, 
+    
+    @Semantics.user.createdBy: true
+    created_by,
+    @Semantics.systemDateTime.createdAt: true
+    created_at,
+    @Semantics.user.lastChangedBy: true
+    last_changed_by,   
+    @Semantics.user.localInstanceLastChangedBy: true  
+    local_last_changed_by, 
+    @Semantics.systemDateTime.localInstanceLastChangedAt: true
+    local_last_changed_at,
+    @Semantics.systemDateTime.lastChangedAt: true
+    last_changed_at
+}

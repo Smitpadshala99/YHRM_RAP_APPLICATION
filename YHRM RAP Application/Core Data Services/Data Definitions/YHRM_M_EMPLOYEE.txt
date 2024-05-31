@@ -1,0 +1,53 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Managed Scenario Employee'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+@Search.searchable: true
+define view entity YHRM_M_EMPLOYEE as select from yhrm_employee as Employee
+association to parent YHRM_M_DEPARTMENT as _Department on $projection.DepartmentId = _Department.DepartmentId
+association[1] to YHRM_M_ADDRESS as _Address on $projection.AddressId = _Address.AddressId
+association[1] to YHRM_M_JOB as _Job on $projection.JobId = _Job.JobId
+association[1] to yhrm_m_Supervisor  as _Supervisor on $projection.SupervisorId = _Supervisor.EmpId
+association[0..*] to YHRM_M_TIMESHEET as _Timesheet on $projection.EmpId = _Timesheet.Empid
+{
+    @ObjectModel.text.element: ['EmployeeName']
+    @Search.defaultSearchElement: true
+    key emp_id as EmpId,
+    concat(first_name, last_name) as EmployeeName,
+    first_name as FirstName,
+    last_name as LastName,
+    email as Email,
+    phone_no as PhoneNo,
+    dob as Dob,
+    gender as Gender,
+    salary as Salary,
+    hire_date as HireDate,
+    active as Active,
+    resign_date as ResignDate,
+    address_id as AddressId,
+    job_id as JobId,
+    department_id as DepartmentId,
+    supervisor_id as SupervisorId,
+    @Semantics.user.createdBy: true
+    created_by,
+    @Semantics.systemDateTime.createdAt: true
+    created_at,
+    @Semantics.user.lastChangedBy: true
+    last_changed_by,   
+    @Semantics.user.localInstanceLastChangedBy: true  
+    local_last_changed_by, 
+    @Semantics.systemDateTime.localInstanceLastChangedAt: true
+    local_last_changed_at,
+    @Semantics.systemDateTime.lastChangedAt: true
+    last_changed_at,       
+    _Address,
+    _Department,
+    _Job,
+    _Supervisor,
+    _Timesheet
+}

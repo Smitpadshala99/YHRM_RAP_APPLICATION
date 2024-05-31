@@ -1,0 +1,31 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Managed Timesheet CDS'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity YHRM_M_TIMESHEET as select from yhrm_timesheet
+{
+    key empid as Empid,
+    key ydate as Ydate,
+    available as Available,
+    workinghours as Workinghours,
+    leavetype as Leavetype,
+    overtime_hrs as OvertimeHrs,
+    approved_by as ApprovedBy,
+    @Semantics.user.createdBy: true
+    created_by,
+    @Semantics.systemDateTime.createdAt: true
+    created_at,
+    @Semantics.user.lastChangedBy: true
+    last_changed_by,   
+    @Semantics.user.localInstanceLastChangedBy: true  
+    local_last_changed_by, 
+    @Semantics.systemDateTime.localInstanceLastChangedAt: true
+    local_last_changed_at,
+    @Semantics.systemDateTime.lastChangedAt: true
+    last_changed_at
+}

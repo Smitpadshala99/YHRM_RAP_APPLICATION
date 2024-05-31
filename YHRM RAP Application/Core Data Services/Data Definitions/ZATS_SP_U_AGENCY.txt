@@ -1,0 +1,23 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: ' Agency Master Data Unmanaged'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity ZATS_SP_U_AGENCY as select from /dmo/customer as customer
+association[1] to I_Country as _Country on
+$projection.CountryCode = _Country.Country
+{
+    key customer.customer_id as CustomerId,
+        customer.first_name as FirstName,
+        customer.last_name as LastName,
+        customer.title as Title,
+        customer.city as City,
+        customer.country_code as CountryCode,
+        customer.phone_number as PhoneNumber,
+        customer.email_address as EmailAddress,
+        _Country
+}

@@ -1,0 +1,7 @@
+@EndUserText.label : 'Product Extend Str'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY
+define structure ydp_extend_product {
+
+  zzcategory : abap.char(5);
+
+}

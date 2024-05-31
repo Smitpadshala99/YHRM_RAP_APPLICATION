@@ -1,0 +1,27 @@
+@EndUserText.label : 'structure for update employee unmanaged'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+define structure yhrm_emp_u_structure {
+
+  key empid             : xsdboolean not null;
+  firstname             : xsdboolean;
+  lastname              : xsdboolean;
+  email                 : xsdboolean;
+  phoneno               : xsdboolean;
+  dob                   : xsdboolean;
+  gender                : xsdboolean;
+  salary                : xsdboolean;
+  hiredate              : xsdboolean;
+  active                : xsdboolean;
+  resigndate            : xsdboolean;
+  addressid             : xsdboolean;
+  jobid                 : xsdboolean;
+  departmentid          : xsdboolean;
+  supervisorid          : xsdboolean;
+  created_by            : xsdboolean;
+  created_at            : xsdboolean;
+  last_changed_by       : xsdboolean;
+  local_last_changed_by : xsdboolean;
+  local_last_changed_at : xsdboolean;
+  last_changed_at       : xsdboolean;
+
+}

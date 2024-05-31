@@ -1,0 +1,25 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Help view F4 for Leave Type'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+@ObjectModel.resultSet.sizeCategory: #XS
+define view entity YHRM_F4_LEAVETYPE as select from DDCDS_CUSTOMER_DOMAIN_VALUE_T( p_domain_name: 'YHRM_LEAVETYPE' )
+{
+    @UI.hidden: true
+    key domain_name,
+    @UI.hidden: true
+    key value_position,
+    @UI.hidden: true
+    @Semantics.language: true
+    key language,
+    @ObjectModel.text.element: [ 'Description' ]
+    value_low as Value,
+    @Semantics.text: true
+    @UI.hidden: true
+    text as Description   
+}

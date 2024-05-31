@@ -1,0 +1,379 @@
+CLASS zbp_yhrm_unmanged_employee DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF yhrm_u_employee.
+ENDCLASS.
+
+CLASS zbp_yhrm_unmanged_employee IMPLEMENTATION.
+ENDCLASS.
+
+
+======== LOCAL TYPES =======
+
+
+* lhc_employee stands for Local Handler Class for Employee Entity
+CLASS lhc_employee DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PRIVATE SECTION.
+
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR employee RESULT result.
+
+    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+      IMPORTING keys REQUEST requested_authorizations FOR employee RESULT result.
+
+    METHODS create FOR MODIFY
+      IMPORTING entities FOR CREATE employee.
+
+    METHODS earlynumbering_create FOR NUMBERING
+      IMPORTING entities FOR CREATE employee.
+
+    METHODS update FOR MODIFY
+      IMPORTING entities FOR UPDATE employee.
+
+    METHODS delete FOR MODIFY
+      IMPORTING keys FOR DELETE employee.
+
+    METHODS read FOR READ
+      IMPORTING keys FOR READ employee RESULT result.
+
+    METHODS lock FOR LOCK
+      IMPORTING keys FOR LOCK employee.
+
+*    rba stands for Read by association
+    METHODS rba_timesheet FOR READ
+      IMPORTING keys_rba FOR READ employee\_timesheet FULL result_requested RESULT result LINK association_links.
+
+*    cba stands for Create by association
+    METHODS cba_timesheet FOR MODIFY
+      IMPORTING entities_cba FOR CREATE employee\_timesheet.
+
+    METHODS earlynumbering_cba_timesheet FOR NUMBERING
+      IMPORTING entities FOR CREATE employee\_timesheet.
+
+ENDCLASS.
+
+CLASS lhc_employee IMPLEMENTATION.
+
+  METHOD get_instance_features.
+  ENDMETHOD.
+
+  METHOD get_instance_authorizations.
+  ENDMETHOD.
+
+  METHOD create.
+    zcl_employee_api_class=>get_instance(  )->create_employee(
+        EXPORTING
+            entities = entities
+        CHANGING
+            mapped = mapped
+            failed = failed
+            reported = reported
+    ).
+  ENDMETHOD.
+
+  METHOD earlynumbering_create.
+
+    zcl_employee_api_class=>get_instance(  )->earlynumbering_create_employee(
+        EXPORTING
+            entities = entities
+        CHANGING
+            mapped = mapped
+            failed = failed
+            reported = reported
+    ).
+
+  ENDMETHOD.
+
+  METHOD update.
+    zcl_employee_api_class=>get_instance( )->update_employee(
+
+        EXPORTING
+            entities = entities
+        CHANGING
+            mapped = mapped
+            failed = failed
+            reported = reported
+    ).
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+      zcl_employee_api_class=>get_instance( )->delete_employee(
+        EXPORTING
+            keys = keys
+        CHANGING
+            mapped = mapped
+            failed = failed
+            reported = reported
+     ).
+
+  ENDMETHOD.
+
+  METHOD read.
+
+    zcl_employee_api_class=>get_instance( )->read_employee(
+        EXPORTING
+            keys = keys
+        CHANGING
+            result = result
+            failed = failed
+            reported = reported
+    ).
+
+  ENDMETHOD.
+
+  METHOD lock.
+
+    Try.
+        DATA(lock) = cl_abap_lock_object_factory=>get_instance( iv_name = 'EYHRM_U_LOCKEMP' ).
+
+        catch cx_abap_lock_failure into DATA(exception).
+        RAISE SHORTDUMP exception.
+
+    ENDTRY.
+
+    LOOP AT keys ASSIGNING FIELD-SYMBOL(<lfs_employee>).
+
+        try.
+
+            lock->enqueue(
+                 it_parameter = VALUE #( ( name = 'EmpId' value = ref #( <lfs_employee>-EmpId ) ) )
+             ).
+
+            catch cx_abap_foreign_lock into DATA(foreign_lock).
+
+                APPEND VALUE #(
+
+                    EmpId = keys[ 1 ]-EmpId
+                    %msg = new_message_With_text(
+                        severity = if_abap_behv_message=>severity-error
+                        text = 'Record is locked by :     ' && foreign_lock->user_name
+                     )
+
+                ) TO reported-employee.
+
+                APPEND VALUE #(
+                    EmpId = keys[ 1 ]-EmpId
+                ) TO failed-employee.
+
+            catch cx_abap_lock_failure into exception.
+            RAISE SHORTDUMP exception.
+
+        ENDTRY.
+
+    ENDLOOP.
+
+
+
+  ENDMETHOD.
+
+  METHOD rba_timesheet.
+  ENDMETHOD.
+
+  METHOD cba_timesheet.
+    zcl_employee_api_class=>get_instance( )->cba_timesheet(
+        EXPORTING
+            entities_cba = entities_cba
+        CHANGING
+            mapped = mapped
+            failed = failed
+            reported = reported
+    ).
+
+  ENDMETHOD.
+
+  METHOD earlynumbering_cba_timesheet.
+
+    zcl_employee_api_class=>get_instance( )->earlynumbering_cba_timesheet(
+        EXPORTING
+            entities = entities
+        CHANGING
+            mapped = mapped
+            failed = failed
+            reported = reported
+    ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lhc_timesheet DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PRIVATE SECTION.
+
+    METHODS update FOR MODIFY
+      IMPORTING entities FOR UPDATE timesheet.
+
+    METHODS delete FOR MODIFY
+      IMPORTING keys FOR DELETE timesheet.
+
+    METHODS read FOR READ
+      IMPORTING keys FOR READ timesheet RESULT result.
+
+    METHODS rba_employee FOR READ
+      IMPORTING keys_rba FOR READ timesheet\_employee FULL result_requested RESULT result LINK association_links.
+
+ENDCLASS.
+
+CLASS lhc_timesheet IMPLEMENTATION.
+
+  METHOD update.
+  ENDMETHOD.
+
+  METHOD delete.
+
+
+
+  ENDMETHOD.
+
+  METHOD read.
+
+
+  ENDMETHOD.
+
+  METHOD rba_employee.
+  ENDMETHOD.
+
+ENDCLASS.
+
+*  lsc stands for Local Saver Class
+CLASS lsc_yhrm_u_employee DEFINITION INHERITING FROM cl_abap_behavior_saver.
+  PROTECTED SECTION.
+
+    METHODS finalize REDEFINITION.
+
+    METHODS check_before_save REDEFINITION.
+
+    METHODS save REDEFINITION.
+
+    METHODS cleanup REDEFINITION.
+
+    METHODS cleanup_finalize REDEFINITION.
+
+ENDCLASS.
+
+CLASS lsc_yhrm_u_employee IMPLEMENTATION.
+
+  METHOD finalize.
+  ENDMETHOD.
+
+  METHOD check_before_save.
+      DATA: gt_employee_tmp TYPE STANDARD TABLE OF yhrm_employee,
+            gt_timesheet_tmp TYPE STANDARD TABLE OF yhrm_timesheet,
+            lv_age TYPE i,
+            lv_hire_date TYPE d,
+            lv_dob TYPE d.
+
+
+
+      gt_employee_tmp = zcl_employee_api_class=>get_instance( )->gt_employee.
+      gt_timesheet_tmp = zcl_employee_api_class=>get_instance( )->gt_timesheet.
+
+
+      IF NOT gt_employee_tmp[] IS INITIAL.
+
+        READ TABLE gt_employee_tmp ASSIGNING FIELD-SYMBOL(<lfs_employee_tmp>) INDEX 1.
+
+        IF <lfs_employee_tmp> IS ASSIGNED.
+
+          IF <lfs_employee_tmp>-dob IS NOT INITIAL.
+            lv_age = trunc( ( sy-datum - <lfs_employee_tmp>-dob ) / 365 ).
+            lv_hire_date = <lfs_employee_tmp>-dob + 16 * 365.
+          ELSEIF <lfs_employee_tmp>-hire_date IS NOT INITIAL.
+            lv_age = trunc( ( sy-datum - <lfs_employee_tmp>-hire_date ) / 365 ).
+          ENDIF.
+
+          IF lv_age < 16.
+            APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id
+                            %msg = new_message_with_text(
+                                severity = if_abap_behv_message=>severity-error
+                                text = 'Employee age should be 16 or more.'
+                                )
+                         ) TO reported-employee.
+          ENDIF.
+
+          " Check if hire date is after 16 years from DOB
+          IF <lfs_employee_tmp>-dob IS NOT INITIAL AND <lfs_employee_tmp>-hire_date <= lv_hire_date.
+            APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id
+                            %msg = new_message_with_text(
+                                severity = if_abap_behv_message=>severity-error
+                                text = 'Hire date should be after 16 years from DOB.'
+                                )
+                         ) TO reported-employee.
+          ENDIF.
+
+            IF <lfs_employee_tmp>-email IS NOT INITIAL AND ( NOT <lfs_employee_tmp>-email CO '@.' OR <lfs_employee_tmp>-email CS ' ' ).
+              APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id ) to failed-employee.
+
+              APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id
+                              %msg = new_message_with_text(
+                                  severity = if_abap_behv_message=>severity-error
+                                  text = 'Please enter a valid email address.'
+                                  )
+                           ) to reported-employee.
+            ENDIF.
+
+            IF <lfs_employee_tmp>-phone_no IS NOT INITIAL AND strlen( <lfs_employee_tmp>-phone_no ) ne 10.
+              APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id ) to failed-employee.
+
+              APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id
+                              %msg = new_message_with_text(
+                                  severity = if_abap_behv_message=>severity-error
+                                  text = 'Phone number should be exactly 10 digits.'
+                                  )
+                           ) to reported-employee.
+            ENDIF.
+        ENDIF.
+      ENDIF.
+
+      IF NOT gt_timesheet_tmp[] IS INITIAL.
+
+        READ TABLE gt_timesheet_tmp ASSIGNING FIELD-SYMBOL(<lfs_timesheet_tmp>) INDEX 1.
+
+        IF <lfs_timesheet_tmp> IS ASSIGNED.
+
+          IF <lfs_timesheet_tmp>-ydate IS NOT INITIAL AND <lfs_timesheet_tmp>-ydate <= <lfs_employee_tmp>-hire_date.
+              APPEND VALUE #( empid = <lfs_timesheet_tmp>-empid
+                              %msg = new_message_with_text(
+                                  severity = if_abap_behv_message=>severity-error
+                                  text = 'Timesheet date should be after Hiredate.'
+                                  )
+                           ) TO reported-employee.
+            ENDIF.
+
+           IF <lfs_timesheet_tmp>-available IS NOT INITIAL AND NOT <lfs_timesheet_tmp>-leavetype IS INITIAL AND <lfs_timesheet_tmp>-overtime_hrs > 0.
+              APPEND VALUE #( empid = <lfs_timesheet_tmp>-empid
+                              %msg = new_message_with_text(
+                                  severity = if_abap_behv_message=>severity-error
+                                  text = 'If employee not available, Leave type should be mandatory, and overtime hours must be 0.'
+                                  )
+                           ) TO reported-employee.
+            ENDIF.
+
+           IF <lfs_timesheet_tmp>-workinghours IS NOT INITIAL AND <lfs_timesheet_tmp>-overtime_hrs IS NOT INITIAL.
+                IF <lfs_timesheet_tmp>-workinghours > 8 OR <lfs_timesheet_tmp>-overtime_hrs > 6.
+                     APPEND VALUE #( empid = <lfs_timesheet_tmp>-empid
+                          %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Working hours should not exceed 8 and overtime hours should not exceed 6.'
+                              )
+                       ) TO reported-employee.
+                ENDIF.
+            ENDIF.
+        ENDIF.
+      ENDIF.
+
+
+   ENDMETHOD.
+
+  METHOD save.
+    zcl_employee_api_class=>get_instance(  )->savedata(
+        CHANGING
+            reported = reported
+    ).
+  ENDMETHOD.
+
+  METHOD cleanup.
+  ENDMETHOD.
+
+  METHOD cleanup_finalize.
+  ENDMETHOD.
+
+ENDCLASS.

@@ -1,0 +1,22 @@
+@EndUserText.label: 'Table Function Demo NW7.5'
+define table function YHRM_TF
+with parameters 
+@Environment.systemField: #CLIENT
+p_clnt : abap.clnt
+returns {
+  client : abap.clnt;
+  DepartmentId : yhrm_department_id;
+  Departmentname : yhrm_department_name;
+  salary : yhrm_salary;
+  Department_rank : abap.int1;
+ 
+}
+implemented by method YHRM_AMDB_CLASS=>get_total_salary_of_Department;
+
+//returns {
+//  client : abap.clnt;
+//  JobID : yhrm_job_id;
+//  JobName : yhrm_job_title;
+//  salary : yhrm_salary;
+//}
+//implemented by method YHRM_AMDB_CLASS=>get_total_salary_of_Jobs;

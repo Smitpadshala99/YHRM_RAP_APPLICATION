@@ -1,0 +1,111 @@
+CLASS yhrm_amdb_class DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+    INTERFACES if_amdp_marker_hdb.
+    INTERFACES if_oo_adt_classrun.
+    class-METHODS add_numbers IMPORTING value(a) type i
+                                        value(b) type i
+                              EXPORTING VALUE(result) type i.
+
+    class-METHODS get_Employee_by_id IMPORTING value(Empid) type yhrm_emp_id
+                              EXPORTING VALUE(EmpName) type yhrm_firstname.
+
+    CLASS-METHODS get_total_salary_of_department for table FUNCTION YHRM_TF.
+
+*     CLASS-METHODS get_total_salary_of_Jobs for table FUNCTION yhrm_tf.
+
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+ENDCLASS.
+
+
+
+CLASS yhrm_amdb_class IMPLEMENTATION.
+
+  METHOD if_oo_adt_classrun~main.
+
+  get_employee_by_id(
+    EXPORTING
+        empid = 'EMP0001'
+    IMPORTING
+        EmpName = data(lv_result)
+  ).
+  out->write(
+    EXPORTING
+        data = |Employee Name { lv_result }|
+  ).
+
+
+
+*    add_numbers(
+*        EXPORTING
+*            a = 10
+*            b = 20
+*        IMPORTING
+*            result = data(lv_result)
+*     ).
+*     out->write(
+*        EXPORTING
+*            data = |The total calculated by AMDP is { lv_result }|
+*     ).
+  ENDMETHOD.
+
+  METHOD add_numbers BY DATABASE PROCEDURE FOR HDB LANGUAGE SQLSCRIPT
+  OPTIONS READ-ONLY.
+    result := :a + :b;
+
+  ENDMETHOD.
+
+  METHOD get_employee_by_id BY DATABASE PROCEDURE FOR HDB LANGUAGE SQLSCRIPT
+  OPTIONS READ-ONLY USING yhrm_employee
+       .
+     SELECT first_name into EmpName FROM yhrm_employee where emp_id = :Empid;
+
+  ENDMETHOD.
+
+  METHOD get_total_salary_of_department by DATABASE FUNCTION FOR HDB LANGUAGE SQLSCRIPT
+  OPTIONS READ-ONLY USING yhrm_employee yhrm_department.
+
+    RETURN SELECT
+                  e.client AS client,
+                  d.department_id as DepartmentId,
+                  d.department_name as DepartmentName,
+                  SUM(e.salary) AS salary, RANK ( ) OVER( ORDER BY sum( e.salary ) desc ) as Department_rank
+               FROM
+                  yhrm_employee AS e
+               INNER JOIN
+                  yhrm_department AS d
+               ON
+                  e.department_id = d.department_id
+               WHERE
+                  e.client = d.client
+               GROUP BY
+                  e.client,
+                  d.department_id,
+                  d.department_name;
+
+
+*              Return Select
+*                  e.client AS client,
+*                  j.job_id as JobId,
+*                  j.job_title as JobName,
+*                  SUM(e.salary) AS salary
+*               FROM
+*                  yhrm_employee AS e
+*               INNER JOIN
+*                  yhrm_job AS j
+*               ON
+*                  e.job_id = j.job_id
+*               WHERE
+*                  e.client = j.client
+*               GROUP BY
+*                  e.client,
+*                  j.job_id,
+*                  j.job_title;
+*
+  ENDMETHOD.
+
+ENDCLASS.

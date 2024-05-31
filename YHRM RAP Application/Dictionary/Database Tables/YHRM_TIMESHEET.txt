@@ -1,0 +1,27 @@
+@EndUserText.label : 'Timesheet table'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #ALLOWED
+define table yhrm_timesheet {
+
+  key client            : abap.clnt not null;
+  key empid             : yhrm_emp_id not null;
+  key ydate             : yhrm_date not null;
+  available             : abap_boolean;
+  workinghours          : yhrm_hours;
+  leavetype             : yhrm_leavetype;
+  overtime_hrs          : yhrm_hours;
+  @AbapCatalog.foreignKey.screenCheck : false
+  approved_by           : yhrm_emp_id
+    with foreign key [0..*,1] yhrm_employee
+      where client = yhrm_timesheet.client
+        and emp_id = yhrm_timesheet.approved_by;
+  created_by            : syuname;
+  created_at            : timestampl;
+  last_changed_by       : syuname;
+  local_last_changed_by : abp_locinst_lastchange_user;
+  local_last_changed_at : abp_locinst_lastchange_tstmpl;
+  last_changed_at       : abp_lastchange_tstmpl;
+
+}

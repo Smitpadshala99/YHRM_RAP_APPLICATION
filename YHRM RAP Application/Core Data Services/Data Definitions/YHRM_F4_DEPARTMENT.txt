@@ -1,0 +1,23 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Help view F4 for department'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+@ObjectModel.resultSet.sizeCategory: #XS
+define view entity YHRM_F4_DEPARTMENT as select from yhrm_department
+{
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    key department_id as DepartmentId,
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    department_name as DepartmentName
+    ,
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    hod as HOD
+}

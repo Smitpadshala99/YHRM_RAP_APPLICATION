@@ -1,0 +1,416 @@
+CLASS zcl_employee_api_class DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+
+    DATA:
+          gt_employee TYPE STANDARD TABLE OF yhrm_employee,
+          gt_timesheet TYPE STANDARD TABLE OF yhrm_timesheet,
+          gt_department TYPE STANDARD TABLE OF yhrm_department,
+          gt_address TYPE STANDARD TABLE OF yhrm_address,
+          gt_job TYPE STANDARD TABLE OF yhrm_job.
+
+    TYPES:
+        tt_create_employee TYPE TABLE FOR create yhrm_u_employee,
+        tt_mapped_early TYPE RESPONSE FOR MAPPED EARLY yhrm_u_employee,
+        tt_failed_early TYPE RESPONSE FOR FAILED EARLY yhrm_u_employee,
+        tt_reported_early TYPE RESPONSE FOR REPORTED EARLY yhrm_u_employee,
+        tt_reported_late TYPE RESPONSE FOR REPORTED LATE yhrm_u_employee,
+
+        tt_employee_keys TYPE TABLE FOR READ IMPORT yhrm_u_employee\\employee,
+        tt_employee_result TYPE TABLE FOR READ RESULT yhrm_u_employee\\employee,
+
+        tt_employee_update TYPE TABLE FOR UPDATE yhrm_u_employee\\employee ,
+
+        tt_employee_delete TYPE TABLE FOR delete yhrm_u_employee\\Employee,
+
+        tt_cba_timesheet TYPE table for create yhrm_u_employee\\employee\_timesheet
+        .
+
+
+
+    CLASS-METHODS: get_Instance RETURNING VALUE(ro_instance) TYPE REF TO zcl_employee_api_class.
+
+    METHODS:
+        earlynumbering_create_employee
+             importing entities  type tt_create_employee "table for create yhrm_u_employee\\employee
+             changing mapped  type tt_mapped_early "response for mapped early yhrm_u_employee
+              failed  type tt_failed_early "response for failed early yhrm_u_employee
+              reported  type tt_reported_early, "response for reported early yhrm_u_employee
+
+        create_employee
+            importing entities type tt_create_employee "table for create yhrm_u_employee\\employee
+            changing mapped  type tt_mapped_early "response for mapped early yhrm_u_employee
+            failed  type tt_failed_early "response for failed early yhrm_u_employee
+            reported  type tt_reported_early, "response for reported early yhrm_u_employee
+
+        update_employee
+            importing entities type tt_employee_update"table for update yhrm_u_employee\\employee
+            changing mapped type tt_mapped_early"response for mapped early yhrm_u_employee
+            failed type tt_failed_early"response for failed early yhrm_u_employee
+            reported type tt_reported_early, "response for reported early yhrm_u_employee
+
+        savedata
+         changing reported  type tt_reported_late, "response for reported late yhrm_u_employee
+
+        read_employee
+             importing keys type tt_employee_keys "table for read import yhrm_u_employee\\employee
+             changing result type tt_employee_result "table for read result yhrm_u_employee\\employee
+              failed type tt_failed_early "response for failed early yhrm_u_employee
+              reported type tt_reported_early, "response for reported early yhrm_u_employee
+
+        delete_employee
+            importing keys type tt_employee_delete "table for delete yhrm_u_employee\\employee
+            changing mapped type tt_mapped_early "response for mapped early yhrm_u_employee
+              failed type tt_failed_early "response for failed early yhrm_u_employee
+              reported type tt_reported_early, "response for reported early yhrm_u_employee
+
+        earlynumbering_cba_timesheet
+             importing entities type tt_cba_timesheet "table for create yhrm_u_employee\\employee\_timesheet
+             changing mapped type tt_mapped_early"response for mapped early yhrm_u_employee
+              failed type tt_failed_early"response for failed early yhrm_u_employee
+              reported type tt_reported_early, "response for reported early yhrm_u_employee
+
+         cba_timesheet
+             importing entities_cba type tt_cba_timesheet "table for create yhrm_u_employee\\employee\_timesheet
+             changing mapped  type tt_mapped_early"response for mapped early yhrm_u_employee
+              failed  type tt_failed_early"response for failed early yhrm_u_employee
+              reported  type tt_reported_early"response for reported early yhrm_u_employee
+
+        .
+
+    METHODS get_next_id
+        EXPORTING rv_id type sysuuid_x16.
+    METHODS get_next_employee_id
+        EXPORTING rv_empid type yhrm_emp_id.
+
+  PROTECTED SECTION.
+
+  PRIVATE SECTION.
+
+  CLASS-DATA: mo_instance TYPE REF TO zcl_employee_api_class,
+              gr_employee_d TYPE RANGE OF yhrm_employee-emp_id,
+              lv_timestampl TYPE timestampl,
+              gs_mapped TYPE tt_mapped_early.
+ENDCLASS.
+
+
+
+CLASS zcl_employee_api_class IMPLEMENTATION.
+  METHOD get_instance.
+    mo_instance = ro_instance = COND #( When mo_instance IS BOUND
+                                        THEN mo_instance
+                                        ELSE NEW #( ) ).
+  ENDMETHOD.
+
+   METHOD get_next_id.
+        TRY.
+            rv_id = cl_uuid_factory=>create_system_uuid( )->create_uuid_x16( ).
+        CATCH cx_uuid_error.
+
+        ENDTRY.
+   ENDMETHOD.
+
+   METHOD get_next_employee_id.
+
+      DATA: lv_max_employeeid TYPE yhrm_employee-emp_id,
+            lv_emp_number TYPE i,
+            lv_new_empid TYPE yhrm_employee-emp_id,
+            lv_emp_number_char TYPE c LENGTH 4.
+
+      SELECT emp_id FROM yhrm_employee ORDER BY emp_id DESCENDING INTO @lv_max_employeeid UP TO 1 ROWS.
+      ENDSELECT.
+
+      lv_emp_number = CONV i( lv_max_employeeid+3(4) ).
+      lv_emp_number = lv_emp_number + 1.
+      lv_emp_number_char = CONV #( lv_emp_number ).
+      IF strlen( lv_emp_number_char ) = 1.
+        CONCATENATE 'EMP000' lv_emp_number_char INTO lv_new_empid.
+      ELSEIF strlen( lv_emp_number_char ) = 2.
+        CONCATENATE 'EMP00' lv_emp_number_char INTO lv_new_empid.
+      ELSEIF strlen( lv_emp_number_char ) = 3.
+        CONCATENATE 'EMP0' lv_emp_number_char INTO lv_new_empid.
+      ELSEIF strlen( lv_emp_number_char ) = 4.
+        CONCATENATE 'EMP' lv_emp_number_char INTO lv_new_empid.
+      ELSE.
+        " Handle the error or warning here
+      ENDIF.
+
+      rv_empid = lv_new_empid.
+
+    ENDMETHOD.
+
+
+
+   METHOD earlynumbering_create_employee.
+
+    DATA(ls_mapped) = gs_mapped.
+
+    get_next_employee_id(
+        IMPORTING rv_empid = DATA(lv_new_empid)
+    ).
+
+    READ TABLE gt_employee ASSIGNING FIELD-SYMBOL(<lfs_employee>) INDEX 1.
+    IF <lfs_employee> is ASSIGNED.
+        <lfs_employee>-emp_id = lv_new_empid.
+        UNASSIGN <lfs_employee>.
+    ENDIF.
+
+
+    mapped-employee = VALUE #(
+        FOR ls_entities In entities WHERE ( empid is INITIAL )
+        (
+            %cid = ls_entities-%cid
+            %is_draft = ls_entities-%is_draft
+            EmpId = lv_new_empid
+        )
+
+     ).
+
+  ENDMETHOD.
+
+  METHOD create_employee.
+    gt_employee = CORRESPONDING #( entities MAPPING FROM ENTITY ).
+
+    get time STAMP FIELD lv_timestampl.
+
+      " Get current user
+      DATA(lv_syuname) = sy-uname.
+
+      " Assign values to the fields
+      gt_employee[ 1 ]-created_by = lv_syuname.
+      gt_employee[ 1 ]-created_at = lv_timestampl.
+      gt_employee[ 1 ]-last_changed_by = lv_syuname.
+      gt_employee[ 1 ]-local_last_changed_by = lv_syuname.
+      gt_employee[ 1 ]-local_last_changed_at = lv_timestampl.
+      gt_employee[ 1 ]-last_changed_at = lv_timestampl.
+      gt_employee[ 1 ]-local_last_changed_at = lv_timestampl.
+      gt_employee[ 1 ]-last_changed_at = lv_timestampl.
+
+
+    mapped = VALUE #(
+        employee = value #(
+            FOR ls_entity IN entities (
+                %cid = ls_entity-%cid
+                %key = ls_entity-%key
+                %is_draft = ls_entity-%is_draft
+             )
+         )
+     ).
+
+*    Loop at entities ASSIGNING FIELD-SYMBOL(<lfs_entities>).
+*        IF Not gt_employee[] is INITIAL.
+*            get_next_employee_id(
+*                IMPORTING rv_empid = gt_employee[ 1 ]-emp_id
+*            ).
+*
+*            mapped-employee = VALUE #( (
+*
+*                    %cid = <lfs_entities>-%cid
+*                    %key = <lfs_entities>-%key
+*                    %is_draft = <lfs_entities>-%is_draft
+*             ) ).
+*        ENDIF.
+*
+*    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD savedata.
+    IF NOT gt_employee[] IS INITIAL.
+        MODIFY yhrm_employee FROM TABLE @gt_employee.
+    ENDIF.
+
+    IF NOT gt_timesheet[] IS INITIAL.
+        MODIFY yhrm_timesheet FROM TABLE @gt_timesheet.
+    ENDIF.
+
+    IF NOT gr_employee_d is INITIAL.
+        DELETE FROM yhrm_employee WHERE emp_id IN @gr_employee_d.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD read_employee.
+
+    SELECT * FROM yhrm_employee FOR ALL ENTRIES IN @keys
+    WHERE emp_id = @keys-Empid
+    into TABLE @DATA(lt_employee_data).
+
+    result = CORRESPONDING #( lt_employee_data MAPPING TO ENTITY ).
+
+  ENDMETHOD.
+
+
+  METHOD update_employee.
+
+    DATA: lt_employee_update TYPE STANDARD TABLE OF yhrm_employee,
+          lt_employee_update_x TYPE STANDARD TABLE OF yhrm_emp_u_structure.
+
+          lt_employee_update = CORRESPONDING #( entities MAPPING FROM ENTITY ).
+          lt_employee_update_x = CORRESPONDING #( entities MAPPING FROM ENTITY using CONTROL ).
+
+
+           get time STAMP FIELD lv_timestampl.
+
+          " Get current user
+          DATA(lv_syuname) = sy-uname.
+
+*          " Assign values to the fields
+*          gt_employee[ 1 ]-last_changed_by = lv_syuname.
+*          gt_employee[ 1 ]-local_last_changed_by = lv_syuname.
+*          gt_employee[ 1 ]-local_last_changed_at = lv_timestampl.
+*          gt_employee[ 1 ]-last_changed_at = lv_timestampl.
+
+
+
+          if not lt_employee_update is INITIAL.
+            SELECT * FROM yhrm_employee
+            FOR ALL ENTRIES IN @lt_employee_update
+            where emp_id = @lt_employee_update-emp_id
+            into TABLE @DATA(lt_employee_update_old).
+
+          ENDIF.
+
+          gt_employee = VALUE #(
+            FOR x = 1 WHILE x <= lines( lt_employee_update )
+
+            LET
+                ls_control_flag = VALUE #( lt_employee_update_x[ x ] OPTIONAL )
+                ls_employee_new = VALUE #( lt_employee_update[ x ] OPTIONAL )
+                ls_employee_old = VALUE #( lt_employee_update_old[ emp_id = ls_employee_new-emp_id ] OPTIONAL )
+            IN
+            (
+                emp_id = COND #( When ls_control_flag-empid is not INITIAL
+                                      then ls_employee_new-emp_id
+                                      else ls_employee_old-emp_id )
+                active = COND #( When ls_control_flag-active is not INITIAL
+                                      then ls_employee_new-active
+                                      else ls_employee_old-active )
+                address_id = COND #( When ls_control_flag-addressid is not INITIAL
+                                      then ls_employee_new-address_id
+                                      else ls_employee_old-address_id )
+                department_id = COND #( When ls_control_flag-departmentid is not INITIAL
+                                      then ls_employee_new-department_id
+                                      else ls_employee_old-department_id )
+                dob = COND #( When ls_control_flag-dob is not INITIAL
+                                      then ls_employee_new-dob
+                                      else ls_employee_old-dob )
+                email = COND #( When ls_control_flag-email is not INITIAL
+                                      then ls_employee_new-email
+                                      else ls_employee_old-email )
+                first_name = COND #( When ls_control_flag-firstname is not INITIAL
+                                      then ls_employee_new-first_name
+                                      else ls_employee_old-first_name )
+                gender = COND #( When ls_control_flag-gender is not INITIAL
+                                      then ls_employee_new-gender
+                                      else ls_employee_old-gender )
+                hire_date = COND #( When ls_control_flag-hiredate is not INITIAL
+                                      then ls_employee_new-hire_date
+                                      else ls_employee_old-hire_date )
+                job_id = COND #( When ls_control_flag-jobid is not INITIAL
+                                      then ls_employee_new-job_id
+                                      else ls_employee_old-job_id )
+                last_name = COND #( When ls_control_flag-lastname is not INITIAL
+                                      then ls_employee_new-last_name
+                                      else ls_employee_old-last_name )
+                phone_no = COND #( When ls_control_flag-phoneno is not INITIAL
+                                      then ls_employee_new-phone_no
+                                      else ls_employee_old-phone_no )
+                resign_date = COND #( When ls_control_flag-resigndate is not INITIAL
+                                      then ls_employee_new-resign_date
+                                      else ls_employee_old-resign_date )
+                salary = COND #( When ls_control_flag-salary is not INITIAL
+                                      then ls_employee_new-salary
+                                      else ls_employee_old-salary )
+                supervisor_id = COND #( When ls_control_flag-supervisorid is not INITIAL
+                                      then ls_employee_new-supervisor_id
+                                      else ls_employee_old-supervisor_id )
+
+                last_changed_at = lv_timestampl
+                last_changed_by = lv_syuname
+                local_last_changed_at = lv_timestampl
+                local_last_changed_by = lv_syuname
+           )
+          ).
+
+
+
+  ENDMETHOD.
+
+  METHOD delete_employee.
+    DATA: lt_employee TYPE STANDARD TABLE OF yhrm_employee.
+          lt_employee = CORRESPONDING #( keys MAPPING FROM ENTITY ).
+
+          gr_employee_d = VALUE #(
+                 FOR ls_employee_d In lt_employee
+                 sign = 'I'
+                 option = 'EQ'
+                 ( low = ls_employee_d-emp_id )
+          ).
+  ENDMETHOD.
+
+  METHOD earlynumbering_cba_timesheet.
+
+*    DATA(lv_new_timesheet_id) = get_next_id( ).
+
+    Loop at entities ASSIGNING FIELD-SYMBOL(<lfs_entities>).
+
+        loop at <lfs_entities>-%target ASSIGNING FIELD-SYMBOL(<lfs_timesheet_create>).
+
+            mapped-timesheet = VALUE #( (
+
+                    %cid = <lfs_timesheet_create>-%cid
+                    %key = <lfs_timesheet_create>-%key
+                    %is_draft = <lfs_timesheet_create>-%is_draft
+             ) ).
+
+        ENDLOOP.
+
+    ENDLOOP.
+
+
+  ENDMETHOD.
+
+  METHOD cba_timesheet.
+    gt_timesheet = VALUE #(
+        FOR ls_entities_cba IN entities_cba
+            FOR ls_timesheet_cba IN ls_entities_cba-%target
+            LET
+                ls_rap_timesheet = CORRESPONDING yhrm_timesheet(
+                    ls_timesheet_cba MAPPING FROM ENTITY
+                 )
+            IN (
+                ls_rap_timesheet
+            )
+     ).
+
+     mapped = VALUE #(
+            timesheet = VALUE #(
+                FOR i = 1 WHILE i <= lines( entities_cba )
+                LET
+                    lt_timesheets = value #( entities_cba[ i ]-%target OPTIONAL )
+                IN
+                    FOR j = 1 WHILE j <= lines( lt_timesheets )
+                    LET
+                        ls_curr_timesheet = VALUE #( lt_timesheets[ j ] OPTIONAL )
+                    IN (
+                        %cid = ls_curr_timesheet-%cid
+                        %key = ls_curr_timesheet-%key
+                        Empid = ls_curr_timesheet-Empid
+
+                    )
+
+
+                )
+     ).
+
+
+
+
+
+  ENDMETHOD.
+
+ENDCLASS.

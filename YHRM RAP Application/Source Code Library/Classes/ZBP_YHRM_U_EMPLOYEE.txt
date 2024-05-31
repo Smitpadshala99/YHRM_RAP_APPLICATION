@@ -1,0 +1,132 @@
+CLASS zbp_yhrm_u_employee DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF yhrm_u_employee.
+ENDCLASS.
+
+CLASS zbp_yhrm_u_employee IMPLEMENTATION.
+ENDCLASS.
+
+
+========== LOCAL TYPES ======
+
+CLASS lhc_employee DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  DATA : lt_employee TYPE yhrm_tt_employee.
+  PRIVATE SECTION.
+    METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
+      IMPORTING REQUEST requested_authorizations FOR employee RESULT result.
+
+    METHODS create FOR MODIFY
+      IMPORTING entities FOR CREATE employee.
+
+    METHODS update FOR MODIFY
+      IMPORTING entities FOR UPDATE employee.
+
+    METHODS delete FOR MODIFY
+      IMPORTING keys FOR DELETE employee.
+
+    METHODS read FOR READ
+      IMPORTING keys FOR READ employee RESULT result.
+
+    METHODS lock FOR LOCK
+      IMPORTING keys FOR LOCK employee.
+
+ENDCLASS.
+
+CLASS lhc_employee IMPLEMENTATION.
+
+  METHOD get_global_authorizations.
+  ENDMETHOD.
+
+
+
+  METHOD create.
+
+    DATA:
+*          messages    TYPE /dmo/t_message,
+          employee_in TYPE yhrm_employee.
+
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<employee_create>).
+      employee_in = CORRESPONDING #( <employee_create> MAPPING FROM ENTITY USING CONTROL ).
+
+      APPEND employee_in TO lt_employee.
+*      IF messages IS INITIAL.
+*        mapped-employee = VALUE #( BASE mapped-employee
+*                                   ( %cid = <employee_create>-%cid
+*                                     empid = employee_in-emp_id
+*                                    ) ).
+*
+*
+*      ELSE.
+*        LOOP AT messages INTO DATA(ls_messages).
+*          APPEND VALUE #( %cid = <employee_create>-%cid
+*                          empid = <employee_create>-empid )
+*                          TO failed-employee.
+*
+*          APPEND VALUE #( %msg = new_message(
+*                                      id = ls_messages-msgid
+*                                      number = ls_messages-msgno
+*                                      v1 = ls_messages-msgv1
+*                                      v2 = ls_messages-msgv2
+*                                      v3 = ls_messages-msgv3
+*                                      v4 = ls_messages-msgv4
+*                                      severity = if_abap_behv_message=>severity-error )
+*
+*                          %key-empid = <employee_create>-empid
+*                          %cid = <employee_create>-%cid
+*                          empid = <employee_create>-empid )
+*                          TO reported-employee.
+*        ENDLOOP.
+*      ENDIF.
+    ENDLOOP.
+*
+    INSERT yhrm_employee FROM TABLE @lt_employee.
+  ENDMETHOD.
+
+
+  METHOD update.
+  ENDMETHOD.
+
+  METHOD delete.
+  ENDMETHOD.
+
+  METHOD read.
+  ENDMETHOD.
+
+  METHOD lock.
+  ENDMETHOD.
+
+ENDCLASS.
+CLASS lsc_yhrm_u_employee DEFINITION INHERITING FROM cl_abap_behavior_saver.
+  PROTECTED SECTION.
+
+    METHODS finalize REDEFINITION.
+
+    METHODS check_before_save REDEFINITION.
+
+    METHODS save REDEFINITION.
+
+    METHODS cleanup REDEFINITION.
+
+    METHODS cleanup_finalize REDEFINITION.
+
+ENDCLASS.
+
+CLASS lsc_yhrm_u_employee IMPLEMENTATION.
+
+  METHOD finalize.
+  ENDMETHOD.
+
+  METHOD check_before_save.
+  ENDMETHOD.
+
+  METHOD save.
+
+  ENDMETHOD.
+
+
+  METHOD cleanup.
+
+  ENDMETHOD.
+
+  METHOD cleanup_finalize.
+  ENDMETHOD.
+
+ENDCLASS.

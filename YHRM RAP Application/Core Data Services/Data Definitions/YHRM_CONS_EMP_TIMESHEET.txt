@@ -1,0 +1,26 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Consumpation view for YHRM'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity YHRM_CONS_EMP_TIMESHEET as select from YHRM_C_EMP_TIMESHEET
+association[1] to YHRM_TF as _DepartmentSalary
+on $projection.DepartmentId = _DepartmentSalary.DepartmentId
+{
+    key EmpId,
+    FirstName,
+    LastName,
+    Email,
+    Dob,
+    Gender,
+    Active,
+    DepartmentId,
+    DepartmentName,
+    _DepartmentSalary(p_clnt: $session.client).Department_rank,
+    /* Associations */
+    _Timesheet
+}

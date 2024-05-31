@@ -1,0 +1,30 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Help view F4 for address'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+@Search.searchable: true
+define view entity YHRM_F4_ADDRESS as select from yhrm_address
+{
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    key address_id as AddressId,
+    @Search.defaultSearchElement: true
+    @Search.fuzzinessThreshold: 0.8
+    street_add1 as StreetAdd1,
+    @Search.defaultSearchElement: true
+    pin_code as PinCode,
+    @Search.defaultSearchElement: true
+    @Search.fuzzinessThreshold: 0.8
+    city as City,
+    @Search.defaultSearchElement: true
+    @Search.fuzzinessThreshold: 0.8
+    state as State,
+    @Search.defaultSearchElement: true
+    @Search.fuzzinessThreshold: 0.8
+    country as Country
+}

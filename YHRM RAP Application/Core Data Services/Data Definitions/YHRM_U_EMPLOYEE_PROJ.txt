@@ -1,0 +1,39 @@
+@EndUserText.label: 'Projection view of Employee CDS'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+define root view entity YHRM_U_EMPLOYEE_PROJ provider contract transactional_query as projection on yhrm_U_EMPLOYEE
+{       
+    @ObjectModel.text.element: [ 'FirstName' ]
+    key EmpId,
+    FirstName,
+    LastName,
+    Email,
+    PhoneNo,
+    Dob,
+    Gender,
+    Salary,
+    HireDate,
+    Active,
+    ResignDate,
+    AddressId,
+    JobId,
+    DepartmentId,
+    SupervisorId,
+    created_by,
+    created_at,
+    last_changed_by,
+    local_last_changed_by,
+    LocalLastChangedAt,
+    LastChangedAt,
+    @UI.hidden: true
+    DepartmentName,
+    @UI.hidden: true
+    SupervisorName,
+    @UI.hidden: true
+    JobTitle,
+    /* Associations */
+    _Address,
+    _Department,
+    _Job,
+    _Supervisor,
+    _Timesheet : redirected to composition child YHRM_U_TIMESHEET_PROJ
+}

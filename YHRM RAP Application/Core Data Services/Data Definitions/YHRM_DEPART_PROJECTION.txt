@@ -1,0 +1,65 @@
+@EndUserText.label: 'Projection view of Department CDS'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+
+@UI.headerInfo: {
+    typeName: 'Department',
+    typeNamePlural: 'Departments',
+    title: { type: #STANDARD, value: 'DepartmentId' },
+    description:{ type: #STANDARD, value: 'DepartmentName' }
+}
+@Search.searchable: true
+define root view entity YHRM_DEPART_PROJECTION provider contract transactional_query as projection on YHRM_M_DEPARTMENT
+{
+    @UI.facet: [{ 
+            id: 'Department',
+            purpose: #STANDARD,
+            type: #IDENTIFICATION_REFERENCE,
+            label: 'Department',
+            position: 10
+    }]
+
+    @UI: {
+            selectionField: [{ position: 10 }],
+            lineItem: [{ position: 10 , label: 'Department Id'}],
+            identification: [{ position: 10, label: 'Department Id' }]
+    }
+    @ObjectModel.text.element: [ 'DepartmentName' ]
+    @EndUserText.label: 'Department Id'
+    @Search.defaultSearchElement: true
+    key DepartmentId,
+    @UI: {
+            selectionField: [{ position: 20 }],
+            lineItem: [{ position: 20 , label: 'Department Name'}],
+            identification: [{ position: 20 , label: 'Department Name'}]
+    }
+    DepartmentName,
+    @Search.defaultSearchElement: true
+    @UI: {
+            selectionField: [{ position: 30 }],
+            lineItem: [{ position: 30 , label: 'Head Of Department'}],
+            identification: [{ position: 30 , label: 'Head Of Department'}]
+    }
+    Hod,
+    @Search.defaultSearchElement: true
+    @UI: {
+            selectionField: [{ position: 40 }],
+            lineItem: [{ position: 40, label: 'Address Id' }],
+            identification: [{ position: 40 , label: 'Address Id'}]
+    }
+    AddressId,
+    @UI.hidden: true
+    created_by,
+    @UI.hidden: true
+    created_at,
+    @UI.hidden: true
+    last_changed_by,
+    @UI.hidden: true
+    local_last_changed_by,
+    @UI.hidden: true
+    local_last_changed_at,
+    @UI.hidden: true
+    last_changed_at,
+    /* Associations */
+    _Address,
+    _Employee : redirected to composition child YHRM_EMP_PROJECTION
+}

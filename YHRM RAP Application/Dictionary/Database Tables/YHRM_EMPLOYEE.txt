@@ -1,0 +1,47 @@
+@EndUserText.label : 'Employee table'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #ALLOWED
+define table yhrm_employee {
+
+  key client            : abap.clnt not null;
+  key emp_id            : yhrm_emp_id not null;
+  first_name            : yhrm_firstname;
+  last_name             : yhrm_lastname;
+  email                 : yhrm_email;
+  phone_no              : yhrm_phone_no;
+  dob                   : yhrm_dob;
+  gender                : yhrm_gender;
+  salary                : yhrm_salary;
+  hire_date             : yhrm_hire_date;
+  active                : abap_boolean;
+  resign_date           : yhrm_resign_date;
+  @AbapCatalog.foreignKey.screenCheck : false
+  address_id            : yhrm_address_id
+    with foreign key [0..*,1] yhrm_address
+      where client = yhrm_employee.client
+        and address_id = yhrm_employee.address_id;
+  @AbapCatalog.foreignKey.screenCheck : false
+  job_id                : yhrm_job_id
+    with foreign key [0..*,1] yhrm_job
+      where client = yhrm_employee.client
+        and job_id = yhrm_employee.job_id;
+  @AbapCatalog.foreignKey.screenCheck : false
+  department_id         : yhrm_department_id
+    with foreign key [0..*,1] yhrm_department
+      where client = yhrm_employee.client
+        and department_id = yhrm_employee.department_id;
+  @AbapCatalog.foreignKey.screenCheck : false
+  supervisor_id         : yhrm_supervisor_id
+    with foreign key [0..*,1] yhrm_employee
+      where client = yhrm_employee.client
+        and emp_id = yhrm_employee.supervisor_id;
+  created_by            : syuname;
+  created_at            : timestampl;
+  last_changed_by       : syuname;
+  local_last_changed_by : abp_locinst_lastchange_user;
+  local_last_changed_at : abp_locinst_lastchange_tstmpl;
+  last_changed_at       : abp_lastchange_tstmpl;
+
+}

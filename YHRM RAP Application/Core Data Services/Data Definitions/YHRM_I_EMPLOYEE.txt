@@ -1,0 +1,25 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Interface View Employee'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity YHRM_I_EMPLOYEE as select from yhrm_employee
+association[1] to yhrm_department as _Department on
+$projection.DepartmentId = _Department.department_id
+{
+    key emp_id as EmpId,
+    first_name as FirstName,
+    last_name as LastName,
+    email as Email,
+    phone_no as PhoneNo,
+    dob as Dob,
+    gender as Gender,
+    active as Active,
+    salary as Salary,
+    department_id as DepartmentId,
+    _Department
+}

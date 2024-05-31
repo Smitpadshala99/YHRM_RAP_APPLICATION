@@ -1,0 +1,64 @@
+managed implementation in class zbp_yhrm_m_department unique;
+strict ( 2 );
+with draft;
+define behavior for YHRM_M_DEPARTMENT alias Department
+persistent table yhrm_department
+draft table yhrm_depart_d
+lock master total etag last_changed_at
+authorization master ( instance )
+etag master local_last_changed_at
+
+{
+  create;
+  update;
+  delete;
+
+  field ( readonly : update, mandatory : create ) DepartmentId;
+
+  draft action Edit;
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare;
+
+
+  association _Employee { create; with draft; }
+
+  mapping for yhrm_department corresponding {
+    DepartmentId = department_id;
+    DepartmentName = department_name;
+    Hod = hod;
+    AddressId = address_id;
+  }
+}
+
+define behavior for YHRM_M_EMPLOYEE alias Employee
+persistent table yhrm_employee
+draft table yhrm_employee_d
+lock dependent by _Department
+authorization dependent by _Department
+etag master local_last_changed_at
+{
+  update;
+  delete;
+  field ( readonly ) DepartmentId;
+  association _Department { with draft; }
+
+  mapping for YHRM_EMPLOYEE corresponding {
+    EmpId = emp_id;
+    FirstName = first_name;
+    LastName = last_name;
+    DepartmentId = department_id;
+    AddressId = address_id;
+    Active = active;
+    Dob = dob;
+    Email = email;
+    Gender = gender;
+    HireDate = hire_date;
+    JobId = job_id;
+    PhoneNo = phone_no;
+    ResignDate = resign_date;
+    Salary = salary;
+    SupervisorId = supervisor_id;
+  }
+}

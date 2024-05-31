@@ -1,0 +1,87 @@
+@Metadata.layer: #CORE
+@UI.headerInfo: { 
+    typeName: 'Timesheet',
+    typeNamePlural: 'Timesheets',
+    title: { value: 'Empid'},
+    description: { value: '_Employee.FirstName' }
+    ,
+    typeImageUrl: 'sap-icon://timesheet'
+}
+@UI.presentationVariant: [{ 
+    sortOrder: [ { by: 'Ydate', direction: #DESC } ],
+    visualizations: [{  type: #AS_LINEITEM}]
+ }]
+annotate entity YHRM_U_TIMESHEET
+    with 
+{
+    @UI.facet: [{ 
+        id: 'Date',
+        purpose: #HEADER,
+        type: #DATAPOINT_REFERENCE,
+        position: 10,
+        targetQualifier: 'Date'  
+     }
+     ,
+     { 
+        id: 'Available',
+        purpose: #HEADER,
+        type: #DATAPOINT_REFERENCE,
+        position: 20,
+        targetQualifier: 'Available'  
+     },
+     { 
+        id: 'EmployeeInfo',
+        type: #COLLECTION,
+        label: 'Employee Info',
+        position: 10  
+     },
+     { 
+        id: 'EmployeeTimesheetdata',
+        type: #FIELDGROUP_REFERENCE,
+        purpose: #STANDARD,
+        label: 'Employee Timesheet data',
+        parentId: 'EmployeeInfo',
+        position: 10,
+        targetQualifier: 'Timesheet'
+     }
+    ]
+    
+    @UI.selectionField: [{ position: 10}]
+    @UI.lineItem: [{ position: 10 }]
+    @EndUserText.label: 'Employee Id'
+    Empid;
+    @UI.selectionField: [{ position: 20}]
+    @UI.lineItem: [{ position: 20 }]
+    @UI.dataPoint: { qualifier: 'Date' , title: 'Date'}
+    Ydate;
+    @UI.lineItem: [{ position: 30 }]
+    @UI.dataPoint: { qualifier: 'Available' , title: 'Available'}
+    @UI.fieldGroup: [{ position: 9, qualifier: 'Timesheet'}]
+    @EndUserText.label: 'Available'
+    Available; 
+    @UI.selectionField: [{ position: 40 }]
+    @UI.lineItem: [{ position: 40 , label: 'Working Time Hours'}]
+    @UI.fieldGroup: [{ position: 10, qualifier: 'Timesheet' , label: 'Working Time Hours'}]
+    Workinghours;
+    @UI.selectionField: [{ position: 50}]
+    @UI.lineItem: [{ position: 50 }]
+    @UI.fieldGroup: [{ position: 20, qualifier: 'Timesheet' }]
+    @Consumption.valueHelpDefinition: [{ entity: { element: 'Value' , name: 'YHRM_F4_LEAVETYPE'} }]
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    @EndUserText.label: 'Leave Type'
+    Leavetype;
+    @UI.lineItem: [{ position: 60 , label: 'Over Time Hours'}]
+    @UI.fieldGroup: [{ position: 30, qualifier: 'Timesheet' , label: 'Over Time Hours'}]
+    OvertimeHrs;
+    @UI.lineItem: [{ position: 70 , label: 'Approved By' }]
+    @UI.fieldGroup: [{ position: 40, qualifier: 'Timesheet' , label: 'Approved By'}]
+    @Consumption.valueHelpDefinition: [{ entity: { element: 'EmpId' , name: 'YHRM_F4_EMPLOYEE'} }]
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    @EndUserText.label: 'Department Id'
+    ApprovedBy;
+    /* Associations */
+//    _Employee;
+   
+}

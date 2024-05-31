@@ -1,0 +1,19 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Interface view Timesheet'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity YHRM_I_TIMESHEET as select from yhrm_timesheet
+{
+    key empid as Empid,
+    key ydate as Ydate,
+    available as Available,
+    workinghours as Workinghours,
+    leavetype as Leavetype,
+    overtime_hrs as OvertimeHrs,
+    approved_by as ApprovedBy
+}

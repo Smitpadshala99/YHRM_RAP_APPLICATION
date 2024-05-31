@@ -1,0 +1,27 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Composite view Employee and Timesheet'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity YHRM_C_EMP_TIMESHEET as select from YHRM_I_EMPLOYEE
+association[0..*] to YHRM_I_TIMESHEET as _Timesheet
+on $projection.EmpId = _Timesheet.Empid
+{
+    key YHRM_I_EMPLOYEE.EmpId,
+        YHRM_I_EMPLOYEE.FirstName,
+        YHRM_I_EMPLOYEE.LastName,
+        YHRM_I_EMPLOYEE.Email,
+        YHRM_I_EMPLOYEE.PhoneNo,
+        YHRM_I_EMPLOYEE.Dob,
+        YHRM_I_EMPLOYEE.Gender,
+        YHRM_I_EMPLOYEE.Active,
+        YHRM_I_EMPLOYEE.Salary,
+        YHRM_I_EMPLOYEE.DepartmentId,
+        YHRM_I_EMPLOYEE._Department.department_name as DepartmentName,
+        /* Associations */
+        _Timesheet      
+}

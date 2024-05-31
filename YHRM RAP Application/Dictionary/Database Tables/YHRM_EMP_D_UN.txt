@@ -1,0 +1,35 @@
+@EndUserText.label : 'Draft table for entity YHRM_U_EMPLOYEE unmanaged'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table yhrm_emp_d_un {
+
+  key mandt             : mandt not null;
+  key empid             : yhrm_emp_id not null;
+  firstname             : yhrm_firstname;
+  lastname              : yhrm_lastname;
+  email                 : yhrm_email;
+  phoneno               : yhrm_phone_no;
+  dob                   : yhrm_dob;
+  gender                : yhrm_gender;
+  salary                : yhrm_salary;
+  hiredate              : yhrm_hire_date;
+  active                : abap_boolean;
+  resigndate            : yhrm_resign_date;
+  addressid             : yhrm_address_id;
+  jobid                 : yhrm_job_id;
+  departmentid          : yhrm_department_id;
+  supervisorid          : yhrm_supervisor_id;
+  created_by            : syuname;
+  created_at            : timestampl;
+  last_changed_by       : syuname;
+  local_last_changed_by : abp_locinst_lastchange_user;
+  locallastchangedat    : abp_locinst_lastchange_tstmpl;
+  lastchangedat         : abp_lastchange_tstmpl;
+  jobtitle              : yhrm_job_title;
+  departmentname        : yhrm_department_name;
+  supervisorname        : yhrm_firstname;
+  "%admin"              : include sych_bdl_draft_admin_inc;
+
+}

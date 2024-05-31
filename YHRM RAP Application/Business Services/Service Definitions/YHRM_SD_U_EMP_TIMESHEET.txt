@@ -1,0 +1,5 @@
+@EndUserText.label: 'SD Employee and Timesheet unmanaged'
+define service YHRM_SD_U_EMP_TIMESHEET {
+  expose YHRM_U_EMPLOYEE_PROJ  as Employee;
+  expose YHRM_U_TIMESHEET_PROJ as Timesheet;
+}

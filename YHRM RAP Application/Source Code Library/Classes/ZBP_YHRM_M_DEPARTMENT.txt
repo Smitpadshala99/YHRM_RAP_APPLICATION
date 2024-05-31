@@ -1,0 +1,24 @@
+CLASS zbp_yhrm_m_department DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF yhrm_m_department.
+ENDCLASS.
+
+CLASS zbp_yhrm_m_department IMPLEMENTATION.
+ENDCLASS.
+
+
+======= LOCAL TYPES ========
+
+
+CLASS lhc_department DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PRIVATE SECTION.
+
+    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+      IMPORTING keys REQUEST requested_authorizations FOR department RESULT result.
+
+ENDCLASS.
+
+CLASS lhc_department IMPLEMENTATION.
+
+  METHOD get_instance_authorizations.
+  ENDMETHOD.
+
+ENDCLASS.

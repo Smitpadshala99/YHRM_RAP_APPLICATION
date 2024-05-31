@@ -1,0 +1,17 @@
+@EndUserText.label : 'Employee Table'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table zdp_employee {
+
+  key client : abap.clnt not null;
+  key empid  : abap.numc(6) not null;
+  empname    : abap.char(30);
+  gender     : abap.char(6);
+  @AbapCatalog.foreignKey.screenCheck : false
+  department : zdp_dtel_department
+    with foreign key [0..*,1] zdp_department
+      where department = zdp_employee.department;
+
+}

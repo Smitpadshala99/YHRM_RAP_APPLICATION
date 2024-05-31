@@ -1,0 +1,34 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Help view F4 for employee'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+@Search.searchable: true
+define view entity YHRM_F4_EMPLOYEE as select from yhrm_employee
+{   
+    @Search.defaultSearchElement: true 
+    @ObjectModel.text.element: ['FirstName']
+    @EndUserText.label: 'Employee Id'
+    key emp_id as EmpId,
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    first_name as FirstName,
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    last_name as LastName,
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    gender as Gender,
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    @EndUserText.label: 'Active'
+    active as Active,
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    @EndUserText.label: 'Supervisor Id'
+    supervisor_id as SupervisorId
+}

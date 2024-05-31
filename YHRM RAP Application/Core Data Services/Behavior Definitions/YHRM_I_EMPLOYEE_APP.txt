@@ -1,0 +1,43 @@
+managed implementation in class zbp_yhrm_i_employee_app unique;
+strict ( 2 );
+with draft;
+define behavior for YHRM_I_EMPLOYEE_APP alias Employee
+persistent table yhrm_employee
+draft table yhrm_employee_d
+lock master total etag last_changed_at
+authorization master ( instance )
+etag master local_last_changed_at
+{
+  create;
+  update;
+  delete;
+
+  field ( readonly ) created_at, created_by, last_changed_at, last_changed_by, local_last_changed_at, local_last_changed_by;
+  field ( readonly : update ) EmpId;
+  field ( mandatory : create ) EmpId;
+//  , FirstName, DepartmentId, Email, HireDate;
+
+  draft action Edit;
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare;
+
+  mapping for yhrm_employee{
+    EmpId = emp_id;
+    FirstName = first_name;
+    LastName = last_name;
+    DepartmentId = department_id;
+    AddressId = address_id;
+    Active = active;
+    Dob = dob;
+    Email = email;
+    Gender = gender;
+    HireDate = hire_date;
+    JobId = job_id;
+    PhoneNo = phone_no;
+    ResignDate = resign_date;
+    Salary = salary;
+    SupervisorId = supervisor_id;
+  }
+}

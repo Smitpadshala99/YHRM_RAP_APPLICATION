@@ -1,0 +1,151 @@
+@EndUserText.label: 'Projection view of Employee CDS'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@UI.headerInfo: {
+    typeName: 'Employee',
+    typeNamePlural: 'Employees',
+    title: { type: #STANDARD, value: 'EmpId' },
+    description:{ type: #STANDARD, value: 'EmployeeName' }
+}
+@Search.searchable: true
+define view entity YHRM_EMP_PROJECTION as projection on YHRM_M_EMPLOYEE
+{
+    @UI.facet: [
+    { 
+        id: 'EmployeeName',
+        purpose: #HEADER,
+        type: #DATAPOINT_REFERENCE,
+        position: 10,
+        targetQualifier: 'EmpName'  
+     }
+     ,
+//     { 
+//        id: 'EmployeePhoneNo',
+//        purpose: #HEADER,
+//        type: #DATAPOINT_REFERENCE,
+//        position: 20,
+//        targetQualifier: 'PhoneNo'  
+//     },
+//     { 
+//        id: 'EmployeeInfo',
+//        type: #COLLECTION,
+//        label: 'Employee Info',
+//        position: 10  
+//     },
+//     { 
+//        id: 'Employee',
+//        type: #IDENTIFICATION_REFERENCE,
+//        purpose: #STANDARD,
+//        label: 'Employee Professional Info',
+//        position: 10  
+//     },
+     {
+        id: 'EmployeeProfessionalData',
+        type: #FIELDGROUP_REFERENCE,
+        purpose: #STANDARD,
+        position: 30,
+        targetQualifier: 'proinfo',
+        label: 'Employee Professional Info'
+     },
+     { 
+        id: 'EmployeePersonaldata',
+        type: #FIELDGROUP_REFERENCE,
+        purpose: #STANDARD,
+        label: 'Employee Personal Info',
+        position: 20,
+        targetQualifier: 'Info'
+     }
+    ]
+    
+    @UI.selectionField: [{ position: 10}]
+    @UI.lineItem: [{ position: 10 ,label: 'Employee Id' , cssDefault.width: '10rem'} ]
+    @UI.identification: [{ position: 1 , label: 'Employee Id'}] 
+    @Search.defaultSearchElement: true 
+    @EndUserText.label: 'Employee Id'
+    @Consumption.valueHelpDefinition: [{ entity: { element: 'EmpId' , name: 'YHRM_F4_EMPLOYEE'} }]
+    @UI.fieldGroup: [{ position: 10, qualifier: 'proinfo' ,cssDefault.width: '10rem'}] 
+    key EmpId,
+    @UI.hidden: true
+    @UI.dataPoint: { qualifier: 'EmpName' , title: 'EmpName' }
+    EmployeeName,
+    @UI : { lineItem: [ { position: 20 , label: 'First Name' , cssDefault.width: '6rem'} ] }
+    @UI.fieldGroup: [{ position: 1, qualifier: 'Info', label: 'First Name' }] 
+    FirstName,
+    @UI : { lineItem: [ { position: 21 , label: 'Last Name' , cssDefault.width: '6rem'} ] }
+    @UI.fieldGroup: [{ position: 2, qualifier: 'Info', label: 'Last Name' }] 
+    LastName,
+    @UI : { selectionField: [{ position: 30}] ,
+            lineItem: [ { position: 30 , label: 'Department Id'} ],
+           identification: [{ position: 10 , label: 'Department Id'}] 
+           }
+    @Consumption.valueHelpDefinition: [{ entity: { element: 'DepartmentId' , name: 'YHRM_F4_DEPARTMENT'} }]
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    @EndUserText.label: 'Department Id'
+    @UI.fieldGroup: [{ position: 20, qualifier: 'proinfo', cssDefault.width: '10rem' }] 
+    DepartmentId,
+    @UI : { selectionField: [{ position: 40}] ,
+           lineItem: [ { position: 40 , label: 'Job Id'} ],
+           identification: [{ position: 20 , label: 'Job Id'}] }
+    @Consumption.valueHelpDefinition: [{ entity: { element: 'JobId' , name: 'YHRM_F4_JOB'} }]
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    @EndUserText.label: 'Job Id'
+    @UI.fieldGroup: [{ position: 30, qualifier: 'proinfo' ,cssDefault.width: '10rem'}] 
+    JobId,
+    @UI : { identification: [{ position: 50 , label: 'Supervisor Id'}]  ,
+           lineItem: [ { position: 50 , label: 'Supervisor Id'} ]}
+    @Consumption.valueHelpDefinition: [{ entity: { element: 'EmpId' , name: 'YHRM_F4_EMPLOYEE'} }]
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    @EndUserText.label: 'Supervisor Id'
+    @UI.fieldGroup: [{ position: 40, qualifier: 'proinfo',cssDefault.width: '10rem' }] 
+    SupervisorId,
+    @UI.lineItem: [{ position: 22 , label: 'Email', cssDefault.width: '12rem'}]
+    @UI.fieldGroup: [{ position: 4, qualifier: 'Info' }] 
+    Email,
+    @UI.lineItem: [{ position: 23 , label: 'Phone Number', cssDefault.width: '8rem'}]
+    @UI.dataPoint: { qualifier: 'PhoneNo' , title: 'Phone Number'}
+    @UI.fieldGroup: [{ position: 5, qualifier: 'Info' , label: 'Phone Number'}] 
+    PhoneNo,
+    @UI.lineItem: [{ position: 24 , cssDefault.width: '8rem'}]
+    @UI.fieldGroup: [{ position: 10, qualifier: 'Info' }]
+    Dob,
+    @UI.lineItem: [{ position: 25 ,label: 'Gender', cssDefault.width: '4rem'}]
+    @UI.fieldGroup: [{ position: 20, qualifier: 'Info' ,label: 'Gender'}]
+    @Consumption.valueHelpDefinition: [{ entity: { element: 'Value' , name: 'YHRM_F4_GENDER'} }]
+    Gender,
+    @UI : { 
+//           selectionField: [{ position: 50}] ,
+           lineItem: [ { position: 29 , label: 'Address Id', cssDefault.width: '5rem'} ],
+           identification: [{ position: 30, label: 'Address Id' }] }
+    @Consumption.valueHelpDefinition: [{ entity: { element: 'AddressId' , name: 'YHRM_F4_ADDRESS'} }]
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 0.8
+    @EndUserText.label: 'Address Id'
+    @UI.fieldGroup: [{ position: 50, qualifier: 'Info'}]
+    AddressId,
+    @UI.lineItem: [{ position: 27 , label: 'Hire Date', cssDefault.width: '8rem'}]
+    @UI.fieldGroup: [{ position: 30, qualifier: 'Info' , label: 'Hire Date' }]
+    HireDate,
+    @UI.lineItem: [{ position: 28 ,label: 'Active', cssDefault.width: '5rem'}]
+    @UI.fieldGroup: [{ position: 40, qualifier: 'Info' ,label: 'Active'}]
+    Active,
+    @UI.hidden: true
+    created_by,
+    @UI.hidden: true
+    created_at,
+    @UI.hidden: true
+    last_changed_by,
+    @UI.hidden: true
+    local_last_changed_by,
+    @UI.hidden: true
+    local_last_changed_at,
+    @UI.hidden: true
+    last_changed_at,
+    /* Associations */
+    _Address,
+    _Department : redirected to parent YHRM_DEPART_PROJECTION,
+    _Job,
+    _Supervisor,
+    _Timesheet
+}

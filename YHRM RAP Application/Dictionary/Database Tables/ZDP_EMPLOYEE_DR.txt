@@ -1,0 +1,15 @@
+@EndUserText.label : 'Employee Table'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table zdp_employee_dr {
+
+  key mandt  : mandt not null;
+  key empid  : abap.numc(6) not null;
+  empname    : abap.char(30);
+  gender     : abap.char(6);
+  department : zdp_dtel_department;
+  "%admin"   : include sych_bdl_draft_admin_inc;
+
+}

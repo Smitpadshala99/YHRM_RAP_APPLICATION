@@ -1,0 +1,91 @@
+CLASS yhrm_unmanaged_emp DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+  METHODS create_employee IMPORTING is_employee TYPE yhrm_employee
+                            EXPORTING et_employee type yhrm_tt_employee.
+
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+
+ENDCLASS.
+
+
+
+CLASS yhrm_unmanaged_emp IMPLEMENTATION.
+
+METHOD create_employee.
+    CLEAR: et_employee.
+    DATA:
+          employee_in TYPE yhrm_employee.
+
+    APPEND employee_in TO et_employee.
+
+ENDMETHOD.
+
+ENDCLASS.
+
+
+
+
+
+
+
+================== LOCAL TYPES ==============
+
+*"* use this source file for the definition and implementation of
+*"* local helper classes, interface definitions and type
+*"* declarations
+
+class zcl_earth DEFINITION.
+    public SECTION.
+        METHODS leave_orbit RETURNING VALUE(r_value) type string.
+
+endclass.
+
+class zcl_earth IMPLEMENTATION.
+    METHOD leave_orbit.
+        r_value = 'Leaving the earth orbit'.
+    ENDMETHOD.
+
+ENDCLASS.
+
+class zcl_int_planet DEFINITION.
+    public SECTION.
+        METHODS leave_orbit RETURNING VALUE(r_value) type string.
+        METHODS enter_orbit RETURNING VALUE(r_value) type string.
+endclass.
+
+class zcl_int_planet IMPLEMENTATION.
+    METHOD leave_orbit.
+        r_value = 'Leaving the Intermediatory Planet Orbit'.
+    ENDMETHOD.
+
+    METHOD enter_orbit.
+        r_value = 'Entering the Intermediatory Planet Orbit'.
+    ENDMETHOD.
+
+ENDCLASS.
+
+class zcl_mars DEFINITION.
+    public SECTION.
+        METHODS enter_orbit RETURNING VALUE(r_value) type string.
+        METHODS manuvour  RETURNING VALUE(r_value) type string.
+        METHODS land RETURNING VALUE(r_value) type string.
+
+endclass.
+
+class zcl_mars IMPLEMENTATION.
+    METHOD enter_orbit.
+        r_value = 'Entering the Mars orbit'.
+    ENDMETHOD.
+    METHOD manuvour.
+        r_value = 'The settelite is manuvouring'.
+    ENDMETHOD.
+    METHOD land.
+        r_value = 'Landed on Mars, Mission Completed..!'.
+    ENDMETHOD.
+
+ENDCLASS.

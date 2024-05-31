@@ -1,0 +1,29 @@
+@EndUserText.label: 'Projection view of Employee App'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@Metadata.allowExtensions: true
+define root view entity YHRM_C_EMPLOYEE_APP provider contract transactional_query as projection on YHRM_I_EMPLOYEE_APP
+{
+    @ObjectModel.text.element: [ 'EmployeeName' ]
+    key EmpId,
+    EmployeeName,
+    FirstName,
+    LastName,
+    Email,
+    PhoneNo,
+    Dob,
+    Gender,
+    Salary,
+    HireDate,
+    Active,
+    ResignDate,
+    AddressId,
+    JobId,
+    DepartmentId,
+    SupervisorId,
+    created_by,
+    created_at,
+    last_changed_by,
+    local_last_changed_by,
+    local_last_changed_at,
+    last_changed_at
+}

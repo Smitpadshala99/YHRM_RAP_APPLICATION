@@ -1,0 +1,38 @@
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+@Metadata.allowExtensions: true
+@EndUserText.label: 'Managed Scenario Department root entiry'
+@Search.searchable: true
+define root view entity YHRM_M_DEPARTMENT as select from yhrm_department as Department
+composition[0..*] of YHRM_M_EMPLOYEE as _Employee 
+association[0..1] to YHRM_M_ADDRESS as _Address on $projection.AddressId = _Address.AddressId
+{
+   
+    @ObjectModel.text.element: ['DepartmentName']
+    @Search.defaultSearchElement: true
+    key department_id as DepartmentId,
+    department_name as DepartmentName,
+    hod as Hod,
+    address_id as AddressId,
+    @Semantics.user.createdBy: true
+    created_by,
+    @Semantics.systemDateTime.createdAt: true
+    created_at,
+    @Semantics.user.lastChangedBy: true
+    last_changed_by,   
+    @Semantics.user.localInstanceLastChangedBy: true  
+    local_last_changed_by, 
+    @Semantics.systemDateTime.localInstanceLastChangedAt: true
+    local_last_changed_at,
+    @Semantics.systemDateTime.lastChangedAt: true
+    last_changed_at,   
+    _Address,
+    _Employee
+    
+}

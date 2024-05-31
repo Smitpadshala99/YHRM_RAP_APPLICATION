@@ -1,0 +1,67 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Employee Master Data'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+@Metadata.allowExtensions: true
+define root view entity yhrm_U_EMPLOYEE as select from yhrm_employee as Employee
+composition[0..*] of YHRM_U_TIMESHEET as _Timesheet
+association[1] to YHRM_U_ADDRESS as _Address on 
+$projection.AddressId = _Address.AddressId
+association[1] to YHRM_U_JOB as _Job on
+$projection.JobId = _Job.JobId
+association[1] to yhrm_employee as _Supervisor on
+$projection.SupervisorId = _Supervisor.emp_id
+association[1] to yhrm_department as _Department on
+$projection.DepartmentId = _Department.department_id
+{
+    @ObjectModel.text.element: [ 'FirstName' ]
+    key emp_id as EmpId,
+//    concat(concat(first_name, ' '), last_name) as EmployeeName,
+    first_name as FirstName,
+    last_name as LastName,
+    email as Email,
+    phone_no as PhoneNo,
+    dob as Dob,
+    gender as Gender,
+    salary as Salary,
+    hire_date as HireDate,
+    active as Active,
+    resign_date as ResignDate,
+    address_id as AddressId,
+      @ObjectModel.text.element: ['JobTitle']
+      @Search.defaultSearchElement: true   
+    job_id as JobId,
+//    _Job.JobTitle as JobTitle, 
+      @ObjectModel.text.element: ['DepartmentName']
+      @Search.defaultSearchElement: true
+    department_id as DepartmentId,
+//    _Department.department_name as DepartmentName,
+    @ObjectModel.text.element: [ 'SupervisorName' ]
+    supervisor_id as SupervisorId,
+//    concat(concat(_Supervisor.first_name, ' '), _Supervisor.last_name) as SupervisorName, 
+    @Semantics.user.createdBy: true
+    created_by,
+    @Semantics.systemDateTime.createdAt: true
+    created_at,
+    @Semantics.user.lastChangedBy: true
+    last_changed_by,   
+    @Semantics.user.localInstanceLastChangedBy: true  
+    local_last_changed_by, 
+    @Semantics.systemDateTime.localInstanceLastChangedAt: true
+    local_last_changed_at as LocalLastChangedAt,
+    @Semantics.systemDateTime.lastChangedAt: true
+    last_changed_at as LastChangedAt,   
+    _Job.JobTitle as JobTitle,
+    _Department.department_name as DepartmentName,
+    _Supervisor.first_name as SupervisorName,
+    _Address,
+    _Department,
+    _Job,
+    _Supervisor,
+    _Timesheet
+}

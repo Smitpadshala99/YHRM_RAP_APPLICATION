@@ -1,0 +1,27 @@
+projection;
+strict ( 2 );
+use draft;
+
+define behavior for YHRM_U_EMPLOYEE_PROJ alias Employee
+use etag
+{
+  use create;
+  use update;
+  use delete;
+
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+
+  use association _Timesheet { create; with draft; }
+}
+
+define behavior for YHRM_U_TIMESHEET_PROJ alias Timesheet
+{
+  use update;
+  use delete;
+
+  use association _Employee { with draft; }
+}

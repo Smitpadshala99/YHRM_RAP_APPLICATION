@@ -1,0 +1,4 @@
+@EndUserText.label: 'SD for Employee App'
+define service YHRM_SD_M_EMPLOYEE_APP {
+  expose YHRM_C_EMPLOYEE_APP as Employee;
+}

@@ -1,0 +1,7 @@
+@EndUserText.label: 'Service Definition Employee'
+define service YHRM_SD_U_EMPLOYEE {
+  expose yhrm_U_EMPLOYEE  as Employee;
+  expose YHRM_U_JOB       as JOB;
+  expose YHRM_U_ADDRESS   as ADDRESS;
+  expose YHRM_U_TIMESHEET as TIMESHEET;
+}

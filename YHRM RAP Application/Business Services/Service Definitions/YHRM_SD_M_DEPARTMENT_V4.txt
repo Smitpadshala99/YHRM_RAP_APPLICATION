@@ -1,0 +1,5 @@
+@EndUserText.label: 'Department and emp Odata V4'
+define service YHRM_SD_M_Department_V4 {
+  expose YHRM_DEPART_PROJECTION;
+  expose YHRM_EMP_PROJECTION;
+}

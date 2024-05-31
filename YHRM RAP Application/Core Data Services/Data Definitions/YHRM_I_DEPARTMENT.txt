@@ -1,0 +1,16 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Department Master Data'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity YHRM_I_DEPARTMENT as select from yhrm_department
+{
+    key department_id as DepartmentId,
+    department_name as DepartmentName,
+    hod as Hod,
+    address_id as AddressId
+}
