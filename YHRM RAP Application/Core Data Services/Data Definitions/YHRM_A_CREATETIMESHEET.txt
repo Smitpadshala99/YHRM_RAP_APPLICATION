@@ -1,0 +1,21 @@
+@EndUserText.label: 'Abstract entity for create timesheet'
+define abstract entity yhrm_A_createtimesheet
+{
+  @EndUserText.label: 'Date'
+  key Ydate        : yhrm_date;
+  @EndUserText.label: 'Available'
+  Available    : abap_boolean;
+  @Consumption.valueHelpDefinition: [{ entity: { element: 'Value' , name: 'YHRM_F4_LEAVETYPE'} }]
+  @EndUserText.label: 'Leave Type'
+  Leavetype    : yhrm_leavetype;
+  @EndUserText.label: 'Working Hours'
+  Workinghours : yhrm_hours;
+  @EndUserText.label: 'Overtime Hours'
+  OvertimeHrs  : yhrm_hours;
+  @UI.lineItem : [{ position: 70 , label: 'Approved By' }]
+  @Consumption.valueHelpDefinition: [{ entity: { element: 'EmpId' , name: 'YHRM_F4_EMPLOYEE'} }]
+  @Search.defaultSearchElement: true
+  @Search.fuzzinessThreshold: 0.8
+  @EndUserText.label: 'Approved By'
+  ApprovedBy   : yhrm_emp_id;
+}

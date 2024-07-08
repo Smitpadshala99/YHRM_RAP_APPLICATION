@@ -1,0 +1,15 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'help view foe Ydate in timesheet'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+@Search.searchable: true
+define view entity YHRM_F4_YDATE as select distinct from yhrm_timesheet
+{
+    @Search.defaultSearchElement: true
+    key ydate as Ydate 
+}

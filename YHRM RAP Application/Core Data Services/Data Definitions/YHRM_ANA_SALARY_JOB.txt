@@ -1,0 +1,16 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'salary group by job'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity YHRM_ANA_salary_job as select from yhrm_employee
+{
+    count(distinct emp_id) as No_Of_Employee,
+    sum(salary) as Salary_Of_Job,
+    job_id as JobId,
+    department_id as DepartmentId
+} group by job_id, department_id

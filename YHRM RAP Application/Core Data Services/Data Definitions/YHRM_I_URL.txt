@@ -1,0 +1,22 @@
+managed implementation in class zbp_hrm_i_url unique;
+strict ( 2 );
+
+define behavior for yhrm_i_url //alias <alias_name>
+persistent table yhrm_url
+lock master
+authorization master ( instance )
+//etag master <field_name>
+{
+  create;
+  update;
+  delete;
+
+  field( mandatory : create, readonly : update ) UrlUuid;
+
+  mapping for yhrm_url{
+    Description = description;
+    Name = name;
+    Url = url;
+    UrlUuid = url_uuid;
+  }
+}
