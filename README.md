@@ -34,11 +34,15 @@ These tables support draft functionality, typically used in managed applications
 ## Application Diagrams
 
 ### Database Schema
-![Database Schema]()
+![Database Schema](https://github.com/Smitpadshala99/YHRM_RAP_APPLICATION/blob/main/Img/Database%20Diagram.png)
 
 ### Application Flow
-![Application Flow]()
 
+#### Managed Example (Only Employee)
+![Managed Application Flow](https://github.com/Smitpadshala99/YHRM_RAP_APPLICATION/blob/main/Img/Managed%20Employee%20App%20Diagram.png)
+
+#### Unmanaged Example (Employee & Timesheet)
+![Unmanaged Application Flow](https://github.com/Smitpadshala99/YHRM_RAP_APPLICATION/blob/main/Img/UnManaged%20Employee%20Timesheet%20App%20Diagram.png)
 
 ## Usage
 
@@ -53,3 +57,7 @@ These tables support draft functionality, typically used in managed applications
 - **View Timesheets**: Check the timesheet entries for all employees.
 - **Update Timesheet**: Modify timesheet entries.
 - **Approve Timesheet**: Approve timesheets for final processing.
+
+## Additional Information
+
+For more detailed information, please read the PDF document [Restful Application Programming.pdf](https://github.com/Smitpadshala99/YHRM_RAP_APPLICATION/blob/main/Restful%20Application%20Programming.pdf).
