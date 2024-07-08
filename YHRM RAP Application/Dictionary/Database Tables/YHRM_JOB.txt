@@ -9,6 +9,11 @@ define table yhrm_job {
   key job_id            : yhrm_job_id not null;
   job_title             : yhrm_job_title;
   job_type              : yhrm_job_type;
+  @AbapCatalog.foreignKey.screenCheck : false
+  department_id         : yhrm_department_id
+    with foreign key [0..*,1] yhrm_department
+      where client = yhrm_job.client
+        and department_id = yhrm_job.department_id;
   created_by            : syuname;
   created_at            : timestampl;
   last_changed_by       : syuname;
