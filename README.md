@@ -1,7 +1,16 @@
 # RESTful Application Programming for Human Resource Management
 
 ## Overview
-This project is a Human Resource Management Application built using RESTful principles. It includes examples of both managed and unmanaged scenarios for handling employees and timesheets.
+This repository is designed to help you learn SAP RAP (Restful Application Programming) concepts through a comprehensive Human Resource Management (HRM) project. The project covers various aspects of SAP RAP, including:
+
+- **Managed and Unmanaged Scenarios**: Understand the differences between managed and unmanaged implementations within SAP RAP.
+- **Core Data Services (CDS)**: Learn how to define and utilize CDS views to represent and manipulate data in your application.
+- **Metadata Extensions**: Explore how metadata extensions can be used to enhance your CDS views with additional information such as UI annotations.
+- **Behavior Definitions**: Define the behavior of your entities, including CRUD operations, validations, and actions.
+- **Service Binding**: Discover how to expose your CDS views and behavior definitions as OData services.
+- **RAP Concepts**: Gain a deeper understanding of various RAP concepts that are crucial for building robust and scalable applications.
+
+This HRM application includes functionalities to manage employees, departments, jobs, addresses, and timesheets. It provides practical examples of both managed and unmanaged scenarios, helping you to grasp the core principles and best practices of SAP RAP.
 
 ## Application Structure
 The application utilizes several key tables to manage data efficiently:
