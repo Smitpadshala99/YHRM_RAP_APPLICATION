@@ -1,0 +1,7 @@
+@Metadata.layer: #CORE
+annotate entity YHRM_EMP_ACTIVE
+    with 
+{
+    @EndUserText.label: 'Set Employee Status'
+    active;
+}

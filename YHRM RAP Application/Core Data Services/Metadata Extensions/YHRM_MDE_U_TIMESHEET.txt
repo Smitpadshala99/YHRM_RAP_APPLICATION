@@ -11,6 +11,7 @@
     sortOrder: [ { by: 'Ydate', direction: #DESC } ],
     visualizations: [{  type: #AS_LINEITEM}]
  }]
+ 
 annotate entity YHRM_U_TIMESHEET
     with 
 {

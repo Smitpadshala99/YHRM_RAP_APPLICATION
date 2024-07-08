@@ -1,0 +1,40 @@
+managed implementation in class zbp_i_travel_sp_m unique;
+strict ( 2 );
+
+define behavior for ZI_TRAVEL_SP_M //alias <alias_name>
+persistent table ztravel_sp_m
+lock master
+authorization master ( instance )
+//etag master <field_name>
+{
+  create;
+  update;
+  delete;
+  association _Booking { create; }
+}
+
+define behavior for ZI_Booking_SP_M //alias <alias_name>
+persistent table zbooking_sp_m
+lock dependent by _Travel
+authorization dependent by _Travel
+//etag master <field_name>
+{
+  update;
+  delete;
+  field ( readonly ) TravelId;
+  association _Travel;
+  association _BookingSupplement { create; }
+}
+
+define behavior for ZI_Booksuppl_SP_M //alias <alias_name>
+persistent table zbooksupple_sp_m
+lock dependent by _Travel
+authorization dependent by _Travel
+//etag master <field_name>
+{
+  update;
+  delete;
+  field ( readonly ) BookingId, TravelId;
+  association _Travel;
+  association _Booking;
+}

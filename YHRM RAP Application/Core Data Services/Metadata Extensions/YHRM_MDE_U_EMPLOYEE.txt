@@ -7,11 +7,43 @@
     ,
     typeImageUrl: 'sap-icon://employee'
 }
+//@UI.presentationVariant: [{ 
+//    sortOrder: [ { by: 'EmpId', direction: #DESC } ],
+//    visualizations: [{  type: #AS_LINEITEM}]
+// }]
+ 
+@UI.chart: [{ 
+    qualifier: 'GenderChart',
+    title: 'Employees by Gender',
+    dimensions: ['Gender'],
+    measures: ['EmpId'],
+    chartType: #COLUMN
+}, {
+    qualifier: 'DepartmentChart',
+    title: 'Employees by Department',
+    dimensions: ['DepartmentId'],
+    measures: ['EmpId'],
+    chartType: #COLUMN
+}, {
+    qualifier: 'JobChart',
+    title: 'Employees by Job',
+    dimensions: ['JobId'],
+    measures: ['EmpId'],
+    chartType: #COLUMN
+}]
+
 @UI.presentationVariant: [{ 
-    sortOrder: [ { by: 'EmpId', direction: #DESC } ],
-    visualizations: [{  type: #AS_LINEITEM}]
- }]
- @Search.searchable: true
+    qualifier: 'Default', 
+    visualizations: [
+        { type: #AS_CHART, qualifier: 'GenderChart' },
+        { type: #AS_CHART, qualifier: 'DepartmentChart' },
+        { type: #AS_CHART, qualifier: 'JobChart' }
+    ]
+}]
+
+
+
+@Search.searchable: true
 annotate entity yhrm_U_EMPLOYEE
     with 
 {
@@ -67,8 +99,12 @@ annotate entity yhrm_U_EMPLOYEE
      }
     ]
     
+    @UI: { lineItem: [
+            { position: 10 ,label: 'Employee Id' , cssDefault.width: '10rem'} ,
+            { type: #FOR_ACTION , dataAction: 'updateEmployeeStatus', label: 'Change Employee Status', position: 10 }
+          ]}
+    
     @UI.selectionField: [{ position: 10}]
-    @UI.lineItem: [{ position: 10 ,label: 'Employee Id' , cssDefault.width: '10rem'} ]
     @UI.identification: [{ position: 1 , label: 'Employee Id'}] 
     @Search.defaultSearchElement: true 
     @EndUserText.label: 'Employee Id'
