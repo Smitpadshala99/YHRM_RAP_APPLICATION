@@ -2,7 +2,7 @@ managed implementation in class zbp_yhrm_m_department unique;
 strict ( 2 );
 with draft;
 define behavior for YHRM_M_DEPARTMENT alias Department
-persistent table yhrm_department
+persistent table yhrm_depart_new
 draft table yhrm_depart_d
 lock master total etag last_changed_at
 authorization master ( instance )
@@ -24,7 +24,7 @@ etag master local_last_changed_at
 
   association _Employee { create; with draft; }
 
-  mapping for yhrm_department corresponding {
+  mapping for yhrm_depart_new corresponding {
     DepartmentId = department_id;
     DepartmentName = department_name;
     Hod = hod;
@@ -41,7 +41,7 @@ etag master local_last_changed_at
 {
   update;
   delete;
-  field ( readonly ) DepartmentId;
+  field ( readonly ) DepartmentId, EmpId;
   association _Department { with draft; }
 
   mapping for YHRM_EMPLOYEE corresponding {

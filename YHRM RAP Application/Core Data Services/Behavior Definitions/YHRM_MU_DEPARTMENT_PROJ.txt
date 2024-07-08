@@ -1,0 +1,61 @@
+projection;
+strict ( 2 );
+use side effects;
+//use draft;
+
+define behavior for YHRM_MU_DEPARTMENT_PROJ //alias <alias_name>
+use etag
+{
+  use create;
+  use update;
+  use delete;
+
+//  use action Edit;
+//  use action Activate;
+//  use action Discard;
+//  use action Resume;
+//  use action Prepare;
+
+  use association _Job { create;  }
+}
+
+define behavior for YHRM_MU_JOB_PROJ //alias <alias_name>
+use etag
+{
+  use update;
+  use delete;
+
+  use association _Department ;
+  use association _Employee { create;  }
+}
+
+define behavior for YHRM_MU_EMPLOYEE_PROJ //alias <alias_name>
+use etag
+{
+  use update;
+  use delete;
+
+  use association _Department ;
+  use association _Job ;
+  use association _Timesheet { create;  }
+
+      use action createTimesheet;
+
+}
+
+
+define behavior for YHRM_MU_TIMESHEET_PROJ //alias <alias_name>
+use etag
+{
+  use update;
+  use delete;
+
+  use action AvailableYes;
+  use action AvailableNo;
+
+//  use action createTimesheet;
+
+  use association _Department ;
+  use association _Employee ;
+
+}

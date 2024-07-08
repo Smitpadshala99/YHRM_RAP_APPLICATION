@@ -1,0 +1,168 @@
+managed implementation in class zbp_yhrm_mu_department_sp unique;
+strict ( 2 );
+//with draft;
+
+define behavior for YHRM_MU_DEPARTMENT //alias <alias_name>
+implementation in class zbp_yhrm_mu_department_sp unique
+persistent table yhrm_depart_new
+with additional save with full data
+//draft table yhrm_depart_n_d
+lock master
+//total etag LastChangedAt
+authorization master ( instance )
+etag master LastChangedAt
+early numbering
+{
+  create;
+  update;
+  delete;
+
+//  draft action Edit;
+//  draft action Activate optimized;
+//  draft action Discard;
+//  draft action Resume;
+//  draft determine action Prepare{
+//        validation validateAddress;
+//        validation validateHOD;
+//        validation validateName;
+//    }
+
+  field ( readonly ) DepartmentId,StreetAdd1,StreetAdd2, StreetAdd3,State,City,Country,PinCode, LastChangedAt, LocalLastChangedAt, last_changed_by, local_last_changed_by, created_at, created_by;
+  field ( mandatory ) DepartmentName, Hod , AddressId;
+  association _Job { create ( features : instance ); }
+
+
+  validation validateName on save { create; update; field DepartmentName; }
+  validation validateAddress on save { create; update; field AddressId; }
+  validation validateHOD on save { create; update; field Hod; }
+
+  mapping for yhrm_depart_new
+    {
+      DepartmentId       = department_id;
+      DepartmentName     = department_name;
+      Hod                = hod;
+      AddressId          = address_id;
+      LastChangedAt      = last_changed_at;
+      LocalLastChangedAt = local_last_changed_at;
+    }
+}
+
+define behavior for YHRM_MU_JOB //alias <alias_name>
+implementation in class zbp_yhrm_mu_job_sp unique
+persistent table yhrm_job
+//draft table yhrm_job_d
+lock dependent by _Department
+authorization dependent by _Department
+etag master LastChangedAt
+early numbering
+{
+  update;
+  delete;
+  field ( readonly ) DepartmentId, JobId, LastChangedAt, LocalLastChangedAt, last_changed_by, local_last_changed_by, created_at, created_by;
+  field ( mandatory ) JobTitle;
+  association _Department ;
+  association _Employee { create ( features : instance ) ; }
+
+  validation validateTitle on save { create; update; field JobTitle; }
+
+  mapping for yhrm_job
+    {
+      JobId              = job_id;
+      JobTitle           = job_title;
+      JobType            = job_type;
+      DepartmentId       = department_id;
+      LastChangedAt      = last_changed_at;
+      LocalLastChangedAt = local_last_changed_at;
+    }
+}
+
+define behavior for YHRM_MU_EMPLOYEE //alias <alias_name>
+implementation in class zbp_yhrm_mu_employee_sp unique
+persistent table yhrm_employee
+//with unmanaged save
+//draft table yhrm_employ_mu_d
+lock dependent by _Department
+authorization dependent by _Department
+etag master LastChangedAt
+early numbering
+{
+  update ;
+  delete ( features : instance );
+  field ( readonly ) JobId, DepartmentId, EmpId,AttendancePercentage, AvailableCount, StreetAdd1,StreetAdd2, StreetAdd3,State,City,Country,PinCode, LastChangedAt, LocalLastChangedAt, last_changed_by, local_last_changed_by, created_at, created_by;
+  field ( mandatory ) FirstName, Email, Dob, Gender, PhoneNo, SupervisorId, AddressId;
+
+  validation validateAddress_of_employee on save { create; update; field AddressId; }
+  validation validateSupervisor on save { create; update; field SupervisorId; }
+  validation validateAllFields on save {create; update; field LastChangedAt;}
+
+  determination updateemployeename on modify { field Gender; }
+    side effects { field Gender affects field FirstName ;}
+
+  association _Department;
+  association _Job;
+  association _Timesheet { create ( features : instance ); }
+
+
+  factory action ( features : instance ) createTimesheet parameter yhrm_A_createtimesheet [1] ;
+
+  mapping for yhrm_employee
+    {
+      Active             = active;
+      AddressId          = address_id;
+      DepartmentId       = department_id;
+      Dob                = dob;
+      Email              = email;
+      EmpId              = emp_id;
+      FirstName          = first_name;
+      Gender             = gender;
+      HireDate           = hire_date;
+      JobId              = job_id;
+      LastName           = last_name;
+      PhoneNo            = phone_no;
+      ResignDate         = resign_date;
+      Salary             = salary;
+      SupervisorId       = supervisor_id;
+      LastChangedAt      = last_changed_at;
+      LocalLastChangedAt = local_last_changed_at;
+    }
+}
+
+define behavior for YHRM_MU_TIMESHEET //alias <alias_name>
+implementation in class zbp_yhrm_mu_timesheet_sp unique
+persistent table yhrm_timesheet
+//draft table yhrm_time_mu_d
+lock dependent by _Department
+authorization dependent by _Department
+etag master LastChangedAt
+early numbering
+{
+  update;
+  delete;
+  field ( readonly ) Empid, DepartmentId, LastChangedAt, LocalLastChangedAt, last_changed_by, local_last_changed_by, created_at, created_by;
+  field ( mandatory : create, readonly : update ) Ydate;
+  field ( mandatory ) OvertimeHrs, Workinghours;
+
+  action ( features : instance ) AvailableYes result[1] $self;
+  action ( features : instance ) AvailableNo result[1] $self;
+
+  internal action calculateWeeklyHours;
+
+//  action ( features : instance ) createTimesheet parameter yhrm_A_createtimesheet result[1] $self;
+
+  validation validatetimesheet on save { create; update; field LastChangedAt; }
+  association _Department;
+  association _Employee;
+
+  mapping for yhrm_timesheet
+    {
+      ApprovedBy         = approved_by;
+      Available          = available;
+      Empid              = empid;
+      Leavetype          = leavetype;
+      OvertimeHrs        = overtime_hrs;
+      Ydate              = ydate;
+      Workinghours       = workinghours;
+      LastChangedAt      = last_changed_at;
+      LocalLastChangedAt = local_last_changed_at;
+    }
+}
