@@ -3,14 +3,6 @@
 ## Overview
 This project is a Human Resource Management Application built using RESTful principles. It includes examples of both managed and unmanaged scenarios for handling employees and timesheets.
 
-## Features
-- **Employee Management**: Create, read, update, and delete employee records.
-- **Department Management**: Manage departmental data and hierarchy.
-- **Timesheet Management**: Track and manage employee working hours and leaves.
-- **Job Management**: Maintain job titles and types.
-- **Address Management**: Store and update employee addresses.
-- **Draft Handling**: Support for draft operations for managed scenarios.
-
 ## Application Structure
 The application utilizes several key tables to manage data efficiently:
 
@@ -42,10 +34,10 @@ These tables support draft functionality, typically used in managed applications
 ## Application Diagrams
 
 ### Database Schema
-![Database Schema](path/to/database_schema.png)
+![Database Schema]()
 
 ### Application Flow
-![Application Flow](path/to/application_flow.png)
+![Application Flow]()
 
 
 ## Usage
