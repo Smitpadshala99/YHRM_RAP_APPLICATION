@@ -1,0 +1,25 @@
+@EndUserText.label: 'Booking Projection View'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@Metadata.allowExtensions: true
+define view entity ZC_BOOKING_SP_M
+  as projection on ZI_Booking_SP_M
+{
+  key TravelId,
+  key BookingId,
+      BookingDate,
+      CustomerId,
+      CarrierId,
+      ConnectionId,
+      FlightDate,
+      FlightPrice,
+      CurrencyCode,
+      BookingStatus,
+      LastChangedAt,
+      /* Associations */
+      _BookingStatus,
+      _BookingSupplement : redirected to composition child ZC_BOOKSUPPL_SP_M,
+      _Carrier,
+      _Connection,
+      _Customer,
+      _Travel : redirected to parent ZC_TRAVEL_SP_M
+}

@@ -1,0 +1,124 @@
+@EndUserText.label: 'Projection view of MU Timesheet'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+
+@UI.headerInfo: {
+    typeName: 'Timesheet',
+    typeNamePlural: 'Timesheets',
+    title: { value: 'Empid'},
+    description: { value: '_Employee.FirstName' }
+    ,
+    typeImageUrl: 'sap-icon://timesheet'
+}
+@UI.presentationVariant: [{
+    sortOrder: [ { by: 'Ydate', direction: #DESC } ],
+    visualizations: [{  type: #AS_LINEITEM}]
+ }]
+@Search.searchable: true
+define view entity YHRM_MU_TIMESHEET_PROJ
+  as projection on YHRM_MU_TIMESHEET
+{
+      @UI.facet: [{
+          id: 'Date',
+          purpose: #HEADER,
+          type: #DATAPOINT_REFERENCE,
+          position: 10,
+          targetQualifier: 'Date'
+       }
+       ,
+       {
+          id: 'Available',
+          purpose: #HEADER,
+          type: #DATAPOINT_REFERENCE,
+          position: 20,
+          targetQualifier: 'Available'
+       },
+       {
+          id: 'EmployeeInfo',
+          type: #COLLECTION,
+          label: 'Employee Info',
+          position: 10
+       },
+       {
+          id: 'EmployeeTimesheetdata',
+          type: #FIELDGROUP_REFERENCE,
+          purpose: #STANDARD,
+          label: 'Employee Timesheet data',
+          parentId: 'EmployeeInfo',
+          position: 10,
+          targetQualifier: 'Timesheet'
+       }
+      ]
+
+
+      @UI.selectionField: [{ position: 10}]
+      @UI.lineItem: [{ position: 10
+//      , type: #FOR_ACTION , dataAction: 'createTimesheet', label: 'Create Timesheet'
+      }]
+      @EndUserText.label: 'Employee Id'
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'EmpId' , name: 'YHRM_F4_EMPLOYEE'} }]
+  key Empid,
+      @UI.selectionField: [{ position: 20}]
+      @UI.lineItem: [{ position: 20 }]
+      @UI.dataPoint: { qualifier: 'Date' , title: 'Date'}
+      @UI.fieldGroup: [{ position: 1, qualifier: 'Timesheet'}]
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'Ydate' , name: 'YHRM_F4_YDATE'} }]
+  key Ydate,
+      //    @UI.lineItem: [{ position: 30 }]
+     @UI.dataPoint: { qualifier: 'Available' , title: 'Available'}      
+      @UI.fieldGroup: [{ position: 9, qualifier: 'Timesheet'}]
+      @EndUserText.label: 'Available'
+      @UI: { lineItem: [ { position: 30 },
+    { type: #FOR_ACTION , dataAction: 'AvailableYes', label: 'Available', position: 10 },
+    { type: #FOR_ACTION , dataAction: 'AvailableNo', label: 'NotAvailable', position: 20 }
+  ]}
+
+      Available,
+      
+      @UI.hidden: true
+      Criticalhours,
+      @UI.lineItem: [{ position: 40 , label: 'Working Time Hours',type: #AS_DATAPOINT}]
+      @UI.fieldGroup: [{ position: 10, qualifier: 'Timesheet' , label: 'Working Time Hours'}]
+      @UI.dataPoint: { visualization: #PROGRESS, targetValue: 8 , criticality: 'Criticalhours'}
+      Workinghours,
+      @UI.selectionField: [{ position: 50}]
+      @UI.lineItem: [{ position: 50 }]
+      @UI.fieldGroup: [{ position: 20, qualifier: 'Timesheet' }]
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'Value' , name: 'YHRM_F4_LEAVETYPE'} }]
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Leave Type'
+      Leavetype,
+      @UI.lineItem: [{ position: 60 , label: 'Over Time Hours'}]
+      @UI.fieldGroup: [{ position: 30, qualifier: 'Timesheet' , label: 'Over Time Hours'}]
+      OvertimeHrs,
+      @UI.lineItem: [{ position: 70 , label: 'Approved By' }]
+      @UI.fieldGroup: [{ position: 40, qualifier: 'Timesheet' , label: 'Approved By'}]
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'EmpId' , name: 'YHRM_F4_EMPLOYEE'} }]
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Approved By'
+      ApprovedBy,
+      @UI.selectionField: [{ position: 40 }]
+      @EndUserText.label: 'Department Id'
+      @UI.lineItem: [{ position: 80 }]
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'DepartmentId' , name: 'YHRM_F4_DEPARTMENT'} }]
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      DepartmentId,
+      @UI.hidden: true
+      created_by,
+      @UI.hidden: true
+      created_at,
+      @UI.hidden: true
+      last_changed_by,
+      @UI.hidden: true
+      local_last_changed_by,
+      @UI.hidden: true
+      LocalLastChangedAt,
+      @UI.hidden: true
+      LastChangedAt,
+      /* Associations */
+      _Employee   : redirected to parent YHRM_MU_EMPLOYEE_PROJ,
+      _LeaveTypeF4,
+      _Department : redirected to YHRM_MU_DEPARTMENT_PROJ
+}

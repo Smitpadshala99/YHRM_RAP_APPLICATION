@@ -1,0 +1,15 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'employee timesheet with attendance'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity YHRM_MU_TIMESHEET_ATTENDANCE
+  as select from yhrm_timesheet
+{
+  key empid                 as Empid,
+      count(*) as AvailableCount
+} where available = 'X' group by empid

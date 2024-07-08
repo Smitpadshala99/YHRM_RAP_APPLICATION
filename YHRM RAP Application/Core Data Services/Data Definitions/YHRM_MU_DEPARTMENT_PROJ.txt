@@ -1,0 +1,178 @@
+@EndUserText.label: 'Projection view of MU Department'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+
+@UI.headerInfo: {
+    typeName: 'Department',
+    typeNamePlural: 'Departments',
+    title: { type: #STANDARD, value: 'DepartmentId' },
+    description:{ type: #STANDARD, value: 'DepartmentName' },
+    typeImageUrl: 'sap-icon://company-view'
+}
+
+@Search.searchable: true
+define root view entity YHRM_MU_DEPARTMENT_PROJ provider contract transactional_query as projection on YHRM_MU_DEPARTMENT
+{
+    @UI.facet: [
+    { 
+            id: 'Department',
+            purpose: #STANDARD,
+            type: #IDENTIFICATION_REFERENCE,
+            label: 'Department',
+            position: 10
+    },
+    { 
+        id: 'Job',
+        purpose: #STANDARD,
+        position: 50,
+        label: 'Job',
+        type: #LINEITEM_REFERENCE,
+        targetElement: '_Job'
+     },
+     { 
+        id: 'DepartmentId',
+        purpose: #HEADER,
+        type: #DATAPOINT_REFERENCE,
+        position: 10,
+        targetQualifier: 'DepartmentId'  
+     },
+     { 
+        id: 'DepartmentName',
+        purpose: #HEADER,
+        type: #DATAPOINT_REFERENCE,
+        position: 20,
+        targetQualifier: 'DepartmentName'  
+     },
+     { 
+        id: 'HOD',
+        purpose: #HEADER,
+        type: #DATAPOINT_REFERENCE,
+        position: 30,
+        targetQualifier: 'HOD'  
+     }
+     ]
+
+    @UI: {
+            selectionField: [{ position: 10 }],
+            lineItem: [{ position: 10 , label: 'Department Id'}
+    
+            ],
+            identification: [{ position: 10, label: 'Department Id' }
+            ],
+            dataPoint: { title: 'DepartmentId', qualifier: 'DepartmentId' }
+    }
+    
+
+//    @ObjectModel.text.element: [ 'DepartmentName' ]
+    @Search.defaultSearchElement: true 
+    @Search.fuzzinessThreshold: 1
+    @EndUserText.label: 'Department Id'
+    @Consumption.valueHelpDefinition: [{ entity: { element: 'DepartmentId' , name: 'YHRM_F4_DEPARTMENT'} }]
+    key DepartmentId,
+    @UI: {
+            selectionField: [{ position: 20 }],
+            lineItem: [{ position: 20 , label: 'Department Name'}],
+            identification: [{ position: 20 , label: 'Department Name'}],
+            dataPoint: { title: 'Department Name', qualifier: 'DepartmentName' }
+    }
+    @Search.fuzzinessThreshold: 0.8
+    @Consumption.valueHelpDefinition: [{ entity: { element: 'DepartmentName' , name: 'YHRM_F4_DEPARTMENT'} }]
+    @EndUserText.label: 'Department Name'
+    DepartmentName,
+    @UI: {
+        selectionField: [{ position: 30 }],
+        lineItem: [{ position: 30 , label: 'Head Of Department'
+//        , type: #AS_CONTACT, value: '_Employee'
+        }],
+        identification: [{ position: 30 , label: 'Head Of Department'
+//        , type: #AS_CONTACT, value: '_Employee'
+        }],
+        dataPoint: { title: 'Head of Department', qualifier: 'HOD' }
+    }
+    @Search.fuzzinessThreshold: 1
+    @Consumption.valueHelpDefinition: [{ entity: { element: 'EmpId' , name: 'YHRM_F4_EMPLOYEE'} }]
+    @EndUserText.label: 'Head Of Department'
+    Hod,
+    @UI : {
+             lineItem: [ { position: 40 , label: 'Address Id', cssDefault.width: '5rem'
+             } ]
+             ,
+             identification: [{ position: 40, label: 'Address Id' }]
+             }
+
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'AddressId' , name: 'YAPI_I_ADDRESS'},
+               additionalBinding: [{  element: 'City' ,localElement: 'City', usage: #RESULT  },
+                                   { element: 'Country' , localElement: 'Country', usage: #RESULT },
+                                   { element: 'StreetAdd1' , localElement: 'StreetAdd1', usage: #RESULT },
+                                   { element: 'StreetAdd2' , localElement: 'StreetAdd2', usage: #RESULT },
+                                   { element: 'StreetAdd3' , localElement: 'StreetAdd3', usage: #RESULT },
+                                   { element: 'PinCode' , localElement: 'PinCode', usage: #RESULT },
+                                   { element: 'State' , localElement: 'State', usage: #RESULT }
+                                   
+                                   
+                                   ]
+                                      
+                                   }]
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Address Id'
+      @UI.fieldGroup: [{ position: 10, qualifier: 'Address'}]
+      AddressId,
+      
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Street Address1'
+      @UI.fieldGroup: [{ position: 20, qualifier: 'Address'}]
+      StreetAdd1,
+        @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Street Address2'
+      @UI.fieldGroup: [{ position: 30, qualifier: 'Address'}]
+      StreetAdd2,
+        @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Street Address3'
+      @UI.fieldGroup: [{ position: 40, qualifier: 'Address'}]
+      StreetAdd3,
+        @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'PinCode'
+      @UI.fieldGroup: [{ position: 50, qualifier: 'Address'}]
+      PinCode,
+        @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'City'
+      @UI.fieldGroup: [{ position: 60, qualifier: 'Address'}]
+      City,
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'State'
+      @UI.fieldGroup: [{ position: 70, qualifier: 'Address'}]
+      State,
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Country'
+      @UI.fieldGroup: [{ position: 80, qualifier: 'Address'}]
+      Country,
+    @UI.hidden: true
+    created_by,
+    @UI.hidden: true
+    created_at,
+    @UI.hidden: true
+    last_changed_by,
+    @UI.hidden: true
+    local_last_changed_by,
+    @UI.hidden: true
+    LocalLastChangedAt,
+    @UI.hidden: true
+    LastChangedAt,
+    /* Associations */
+    @Search.defaultSearchElement: true
+    _Job : redirected to composition child YHRM_MU_JOB_PROJ,
+    @Search.defaultSearchElement: true
+    _Address,
+    
+    _Employee,
+    _Timesheet,
+    NoOfEmployeePerDepartment,
+    SalaryOfDepartment    
+}

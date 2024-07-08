@@ -1,0 +1,47 @@
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Department CDS for managedwithunmanaged'
+@Search.searchable: true
+define root view entity YHRM_MU_DEPARTMENT as select from yhrm_depart_new
+composition[0..*] of YHRM_MU_JOB as _Job
+association[0..1] to YHRM_MU_ADDRESS as _Address on $projection.AddressId = _Address.AddressId
+association[0..*] to YHRM_MU_EMPLOYEE as _Employee on $projection.DepartmentId = _Employee.DepartmentId
+association[0..*] to YHRM_MU_TIMESHEET as _Timesheet on $projection.DepartmentId = _Timesheet.DepartmentId
+association[1] to YHRM_ANA_salary_department as _DepartmentAnalytics on $projection.DepartmentId = _DepartmentAnalytics.DepartmentId
+{
+    @Search.defaultSearchElement: true
+    key department_id as DepartmentId,
+    @Search.defaultSearchElement: true
+    @Search.fuzzinessThreshold: 0.8
+    department_name as DepartmentName,
+    @Search.defaultSearchElement: true
+    @Search.fuzzinessThreshold: 0.8
+    hod as Hod,
+    @Search.defaultSearchElement: true
+    @Search.fuzzinessThreshold: 0.8
+    address_id as AddressId,
+    @Semantics.user.createdBy: true
+    created_by,
+    @Semantics.systemDateTime.createdAt: true
+    created_at,
+    @Semantics.user.lastChangedBy: true
+    last_changed_by,   
+    @Semantics.user.localInstanceLastChangedBy: true  
+    local_last_changed_by, 
+    @Semantics.systemDateTime.localInstanceLastChangedAt: true
+    local_last_changed_at as LocalLastChangedAt,
+    @Semantics.systemDateTime.lastChangedAt: true
+    last_changed_at as LastChangedAt,
+    _Job,
+    _Address,
+    _Employee,
+    _Timesheet,
+    _Address.StreetAdd1 as StreetAdd1,
+    _Address.StreetAdd2 as StreetAdd2,
+    _Address.StreetAdd3 as StreetAdd3,
+    _Address.PinCode as PinCode,
+    _Address.City as City,
+    _Address.State as State,
+    _Address.Country as Country,
+    _DepartmentAnalytics.Salary_Of_Department as SalaryOfDepartment,
+    _DepartmentAnalytics.No_Of_Employees as NoOfEmployeePerDepartment
+}

@@ -1,0 +1,35 @@
+@EndUserText.label: 'Consumption view for female employees'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+
+
+define view entity ZSP_C_EMPLOYEE_FEMALE_DOY2002 as projection on ZSP_EMPLOYEE  
+{
+
+    key EmpId,
+    FirstName,
+    LastName,
+    Email,
+    PhoneNo,
+    Dob,
+    Gender,
+    Active,
+    AddressId,
+    JobId,
+    DepartmentId,
+    SupervisorId,
+    CreatedBy,
+    CreatedAt,
+    LastChangedBy,
+    LocalLastChangedBy,
+    LocalLastChangedAt,
+    LastChangedAt,
+    StreetAdd1,
+    City,
+    Country,
+    State,
+    PinCode,
+    /* Associations */
+    _Address,
+    _Department,
+    _Job
+} where Gender = 'F' and Dob > '19900101'

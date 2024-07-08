@@ -1,0 +1,46 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Timesheet CDS for managed with unmanaged'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity YHRM_MU_TIMESHEET
+  as select from yhrm_timesheet
+  association        to parent YHRM_MU_EMPLOYEE as _Employee    on $projection.Empid = _Employee.EmpId
+  association [0..*] to YHRM_F4_LEAVETYPE       as _LeaveTypeF4 on $projection.Leavetype = _LeaveTypeF4.Value
+  association [0..1] to YHRM_MU_DEPARTMENT      as _Department  on $projection.DepartmentId = _Department.DepartmentId
+{
+  key empid                  as Empid,
+  key ydate                  as Ydate,
+      available              as Available,
+      case when workinghours >= 6 then 3 //Green
+      when workinghours >= 4 then 2 //orange
+      else 1 // Red
+      end                    as Criticalhours,
+      workinghours           as Workinghours,
+      @ObjectModel.text.element: ['_LeaveTypeF4.Description']
+      leavetype              as Leavetype,
+      overtime_hrs           as OvertimeHrs,
+      approved_by            as ApprovedBy,
+
+      @Semantics.user.createdBy: true
+      created_by,
+      @Semantics.systemDateTime.createdAt: true
+      created_at,
+      @Semantics.user.lastChangedBy: true
+      last_changed_by,
+      @Semantics.user.localInstanceLastChangedBy: true
+      local_last_changed_by,
+      @Semantics.systemDateTime.localInstanceLastChangedAt: true
+      local_last_changed_at  as LocalLastChangedAt,
+      @Semantics.systemDateTime.lastChangedAt: true
+      last_changed_at        as LastChangedAt,
+      _Employee,
+      _Employee.DepartmentId as DepartmentId,
+      _LeaveTypeF4,
+      _Department
+      
+}

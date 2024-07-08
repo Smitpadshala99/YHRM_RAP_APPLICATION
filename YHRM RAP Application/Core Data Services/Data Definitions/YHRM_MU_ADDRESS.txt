@@ -1,0 +1,32 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Address CDS for managed with unmanaged'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define view entity YHRM_MU_ADDRESS as select from yhrm_address
+{
+    key address_id as AddressId,
+    street_add1 as StreetAdd1,
+    street_add2 as StreetAdd2,
+    street_add3 as StreetAdd3,
+    pin_code as PinCode,
+    city as City,
+    state as State,
+    country as Country,
+    @Semantics.user.createdBy: true
+    created_by,
+    @Semantics.systemDateTime.createdAt: true
+    created_at,
+    @Semantics.user.lastChangedBy: true
+    last_changed_by,   
+    @Semantics.user.localInstanceLastChangedBy: true  
+    local_last_changed_by, 
+    @Semantics.systemDateTime.localInstanceLastChangedAt: true
+    local_last_changed_at as LocalLastChangedAt,
+    @Semantics.systemDateTime.lastChangedAt: true
+    last_changed_at as LastChangedAt
+}

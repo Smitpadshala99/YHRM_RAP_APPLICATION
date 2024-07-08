@@ -1,0 +1,31 @@
+@EndUserText.label: 'Travel Projection view'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@Metadata.allowExtensions: true
+define root view entity ZC_TRAVEL_SP_M
+  provider contract transactional_query
+  as projection on ZI_TRAVEL_SP_M
+{
+  key TravelId,
+      AgencyId,
+      _Agency.Name        as AgencyName,
+      CustomerId,
+      _Customer.FirstName as CustomerName,
+      BeginDate,
+      EndDate,
+      BookingFee,
+      TotalPrice,
+      CurrencyCode,
+      Description,
+      OverallStatus,
+      _Status._Text.Text : localized,
+      //      CreatedBy,
+      //      CreatedAt,
+      //      LastChangedBy,
+      LastChangedAt,
+      /* Associations */
+      _Agency,
+      _Booking : redirected to composition child ZC_BOOKING_SP_M,
+      _Currency,
+      _Customer,
+      _Status
+}

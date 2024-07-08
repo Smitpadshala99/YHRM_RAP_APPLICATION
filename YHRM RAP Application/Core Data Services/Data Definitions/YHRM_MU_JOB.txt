@@ -1,0 +1,40 @@
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Job CDS for managed with unmanaged'
+@Search.searchable: true
+define view entity YHRM_MU_JOB as select from yhrm_job
+association to parent YHRM_MU_DEPARTMENT as _Department
+    on $projection.DepartmentId = _Department.DepartmentId    
+composition[0..*] of YHRM_MU_EMPLOYEE as _Employee
+association[1] to YHRM_F4_DEPARTMENT as _DepartmentF4 on $projection.DepartmentId = _DepartmentF4.DepartmentId
+{
+    @Search.defaultSearchElement: true
+    key job_id as JobId,
+    @Search.defaultSearchElement: true
+    @Search.fuzzinessThreshold: 0.8
+    job_title as JobTitle,
+    @Search.defaultSearchElement: true
+    @Search.fuzzinessThreshold: 0.8
+    job_type as JobType,
+    @ObjectModel.text.element: ['DepartmentName']
+    @Search.defaultSearchElement: true
+    @Search.fuzzinessThreshold: 0.8
+    department_id as DepartmentId,
+    @Semantics.user.createdBy: true
+    created_by,
+    @Semantics.systemDateTime.createdAt: true
+    created_at,
+    @Semantics.user.lastChangedBy: true
+    last_changed_by,   
+    @Semantics.user.localInstanceLastChangedBy: true  
+    local_last_changed_by, 
+    @Semantics.systemDateTime.localInstanceLastChangedAt: true
+    local_last_changed_at as LocalLastChangedAt,
+    @Semantics.systemDateTime.lastChangedAt: true
+    last_changed_at as LastChangedAt,
+    @Search.defaultSearchElement: true
+    _Department,
+    _Department.DepartmentName as DepartmentName,
+    _DepartmentF4,
+    @Search.defaultSearchElement: true
+    _Employee 
+}

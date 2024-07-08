@@ -1,0 +1,265 @@
+@EndUserText.label: 'Projection view of MU Employee'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@UI.headerInfo: {
+    typeName: 'Employee',
+    typeNamePlural: 'Employees',
+    title: { value: 'EmpId'},
+    description: { value: 'FirstName' }
+    ,
+    typeImageUrl: 'sap-icon://employee'
+}
+
+@Search.searchable: true
+
+@UI.chart: [{ chartType: #DONUT,
+              qualifier: 'chartAttendancePercentage',
+              measures: ['AttendancePercentage'],
+              measureAttributes: [{
+                    measure: 'AttendancePercentage',
+                    role: #AXIS_2,
+                    asDataPoint: true
+               }]
+ }]
+
+define view entity YHRM_MU_EMPLOYEE_PROJ
+  as projection on YHRM_MU_EMPLOYEE
+{
+      @UI.facet: [
+
+       {
+          id: 'Timesheet',
+          purpose: #STANDARD,
+          position: 50,
+          label: 'Timesheet',
+          type: #LINEITEM_REFERENCE,
+          targetElement: '_Timesheet'
+
+       }
+       ,
+       {
+          id: 'Address',
+          purpose: #STANDARD,
+          position: 40,
+          label: 'Address',
+          targetQualifier: 'Address',
+          type: #FIELDGROUP_REFERENCE
+       }
+       ,
+       {
+          id: 'EmployeeIDs',
+          type: #FIELDGROUP_REFERENCE,
+          purpose: #STANDARD,
+          position: 30,
+          targetQualifier: 'proinfo',
+          label: 'Employee IDs'
+       },
+       {
+          id: 'Employeedata',
+          type: #FIELDGROUP_REFERENCE,
+          purpose: #STANDARD,
+          label: 'Employee Info',
+          position: 20,
+          targetQualifier: 'Info'
+       },
+       {
+        id: 'EmployeeName',
+        purpose: #HEADER,
+        type: #DATAPOINT_REFERENCE,
+        position: 10,
+        targetQualifier: 'EmpName'
+      }
+      ,
+      {
+        id: 'EmployeeEmail',
+        purpose: #HEADER,
+        type: #DATAPOINT_REFERENCE,
+        position: 11,
+        targetQualifier: 'Email'
+      }
+      ,
+      {
+        id: 'EmployeePhoneNo',
+        purpose: #HEADER,
+        type: #DATAPOINT_REFERENCE,
+        position: 20,
+        targetQualifier: 'PhoneNo'
+      }
+      ]
+
+
+      @UI.selectionField: [{ position: 10}]
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Employee Id'
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'EmpId' , name: 'YHRM_F4_EMPLOYEE'} }]
+      @UI.fieldGroup: [{ position: 10, qualifier: 'proinfo' ,cssDefault.width: '10rem'}]
+      @UI: {
+        lineItem: [{ position: 10 ,label: 'Employee Id' , cssDefault.width: '10rem'}
+        ,
+        { type: #FOR_ACTION , dataAction: 'createTimesheet', label: 'Create Timesheet' }
+         ],
+
+        identification: [{ position: 1 , label: 'Employee Id'}
+        ]
+      }
+  key EmpId,
+      @UI : { lineItem: [ { position: 20 , label: 'First Name' , cssDefault.width: '6rem'} ] }
+      @UI.fieldGroup: [{ position: 1, qualifier: 'Info', label: 'First Name' }]
+      @UI.dataPoint: { qualifier: 'EmpName' , title: 'First Name' }
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      FirstName,
+      @UI : { lineItem: [ { position: 21 , label: 'Last Name' , cssDefault.width: '6rem'} ] }
+      @UI.fieldGroup: [{ position: 2, qualifier: 'Info', label: 'Last Name' }]
+      //      @UI.dataPoint: { qualifier: 'Emp' , title: 'Last Name' }
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      LastName,
+      @UI.lineItem: [{ position: 22 , label: 'Email', cssDefault.width: '12rem'}]
+      @UI.fieldGroup: [{ position: 4, qualifier: 'Info' }]
+      @UI.dataPoint: { qualifier: 'Email' , title: 'Email' }
+      Email,
+      @UI.lineItem: [{ position: 23 , label: 'Phone Number', cssDefault.width: '8rem'}]
+      @UI.dataPoint: { qualifier: 'PhoneNo' , title: 'Phone Number'}
+      @UI.fieldGroup: [{ position: 5, qualifier: 'Info' , label: 'Phone Number'}]
+      PhoneNo,
+      @UI.lineItem: [{ position: 24 , cssDefault.width: '8rem'}]
+      @UI.fieldGroup: [{ position: 10, qualifier: 'Info' }]
+      Dob,
+      @UI.lineItem: [{ position: 25 ,label: 'Gender', cssDefault.width: '4rem'}]
+      @UI.fieldGroup: [{ position: 20, qualifier: 'Info' ,label: 'Gender'}]
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'Value' , name: 'YHRM_F4_GENDER'} }]
+      @Search.defaultSearchElement: true
+      Gender,
+      @UI.lineItem: [{ position: 28 ,label: 'Salary', cssDefault.width: '4rem'}]
+      @UI.fieldGroup: [{ position: 21, qualifier: 'Info' ,label: 'Salary'}]
+      Salary,
+      @UI.lineItem: [{ position: 29 , label: 'Hire Date', cssDefault.width: '8rem'}]
+      @UI.fieldGroup: [{ position: 30, qualifier: 'Info' , label: 'Hire Date' }]
+      HireDate,
+      @UI.lineItem: [{ position: 27 ,label: 'Active', cssDefault.width: '5rem'}]
+      @UI.fieldGroup: [{ position: 40, qualifier: 'Info' ,label: 'Active'}]
+      Active,
+      @UI.lineItem: [{ position: 26 ,label: 'Attendance %',
+              cssDefault.width: '7rem',
+              type: #AS_CHART,
+              valueQualifier: 'chartAttendancePercentage'}]
+      @UI.dataPoint: {
+              criticalityCalculation:{
+                    deviationRangeLowValue:  70.00,
+                    toleranceRangeLowValue: 80.00,
+                    improvementDirection: #MAXIMIZE
+
+              }
+      }
+      @UI.fieldGroup: [{ position: 41, qualifier: 'Info' ,label: 'Attendance %'      }]
+
+      AttendancePercentage,
+      @UI.lineItem: [{ position: 31 ,label: 'Resign Date', cssDefault.width: '5rem'}]
+      @UI.fieldGroup: [{ position: 41, qualifier: 'Info' ,label: 'Resign Date'}]
+      ResignDate,
+      @UI : { selectionField: [{ position: 40}] ,
+             lineItem: [ { position: 40 , label: 'Job Id'} ],
+             identification: [{ position: 20 , label: 'Job Id'}] }
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'JobId' , name: 'YHRM_F4_JOB'} }]
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Job Id'
+      @UI.fieldGroup: [{ position: 30, qualifier: 'proinfo' ,cssDefault.width: '10rem'}]
+      JobId,
+      @UI : { selectionField: [{ position: 30}] ,
+              lineItem: [ { position: 30 , label: 'Department Id'} ],
+             identification: [{ position: 10 , label: 'Department Id'}]
+             }
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'DepartmentId' , name: 'YHRM_F4_DEPARTMENT'} }]
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Department Id'
+      @UI.fieldGroup: [{ position: 20, qualifier: 'proinfo', cssDefault.width: '10rem' }]
+      DepartmentId,
+      @UI : { identification: [{ position: 50 , label: 'Supervisor Id'}]  ,
+             lineItem: [ { position: 50 , label: 'Supervisor Id'} ]}
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'EmpId' , name: 'YHRM_F4_EMPLOYEE'} }]
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Supervisor Id'
+      @UI.fieldGroup: [{ position: 40, qualifier: 'proinfo',cssDefault.width: '10rem' }]
+      SupervisorId,
+      @UI : {
+             lineItem: [ { position: 29 , label: 'Address Id', cssDefault.width: '5rem'} ],
+             identification: [{ position: 30, label: 'Address Id' }] }
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'AddressId' , name: 'YAPI_I_ADDRESS'},
+               additionalBinding: [{  element: 'City' ,localElement: 'City', usage: #RESULT  },
+                                   { element: 'Country' , localElement: 'Country', usage: #RESULT },
+                                   { element: 'StreetAdd1' , localElement: 'StreetAdd1', usage: #RESULT },
+                                   { element: 'StreetAdd2' , localElement: 'StreetAdd2', usage: #RESULT },
+                                   { element: 'StreetAdd3' , localElement: 'StreetAdd3', usage: #RESULT },
+                                   { element: 'PinCode' , localElement: 'PinCode', usage: #RESULT },
+                                   { element: 'State' , localElement: 'State', usage: #RESULT }
+
+
+                                   ]
+
+                                   }]
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Address Id'
+      @UI.fieldGroup: [{ position: 10, qualifier: 'Address'}]
+      AddressId,
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Street Address1'
+      @UI.fieldGroup: [{ position: 20, qualifier: 'Address'}]
+      StreetAdd1,
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Street Address2'
+      @UI.fieldGroup: [{ position: 30, qualifier: 'Address'}]
+      StreetAdd2,
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Street Address3'
+      @UI.fieldGroup: [{ position: 40, qualifier: 'Address'}]
+      StreetAdd3,
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'PinCode'
+      @UI.fieldGroup: [{ position: 50, qualifier: 'Address'}]
+      PinCode,
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'City'
+      @UI.fieldGroup: [{ position: 60, qualifier: 'Address'}]
+      City,
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'State'
+      @UI.fieldGroup: [{ position: 70, qualifier: 'Address'}]
+      State,
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @EndUserText.label: 'Country'
+      @UI.fieldGroup: [{ position: 80, qualifier: 'Address'}]
+      Country,
+      @UI.hidden: true
+      created_by,
+      @UI.hidden: true
+      created_at,
+      @UI.hidden: true
+      last_changed_by,
+      @UI.hidden: true
+      local_last_changed_by,
+      @UI.hidden: true
+      LocalLastChangedAt,
+      @UI.hidden: true
+      LastChangedAt,
+
+      /* Associations */
+      _Address,
+      _DepartmentF4,
+      _GenderF4,
+      _Job        : redirected to parent YHRM_MU_JOB_PROJ,
+      _JobF4,
+      _Timesheet  : redirected to composition child YHRM_MU_TIMESHEET_PROJ,
+      _Department : redirected to YHRM_MU_DEPARTMENT_PROJ
+}

@@ -1,0 +1,137 @@
+@EndUserText.label: 'Projection view of MU Job'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+
+@UI.headerInfo: {
+    typeName: 'Job',
+    typeNamePlural: 'Jobs',
+    title: { type: #STANDARD, value: 'JobId' },
+    description:{ type: #STANDARD, value: 'JobTitle' },
+    typeImageUrl: 'sap-icon://work-history'
+
+}
+
+
+@Search.searchable: true
+define view entity YHRM_MU_JOB_PROJ
+  as projection on YHRM_MU_JOB
+{
+      @UI.facet: [
+      {
+              id: 'Job',
+              purpose: #STANDARD,
+              type: #IDENTIFICATION_REFERENCE,
+              position: 10
+      },
+      {
+          id: 'Employee',
+          purpose: #STANDARD,
+          position: 30,
+          label: 'Employee',
+          type: #LINEITEM_REFERENCE,
+          targetElement: '_Employee'
+       },
+       {
+          id: 'JobId',
+          purpose: #HEADER,
+          type: #DATAPOINT_REFERENCE,
+          position: 10,
+          targetQualifier: 'Jobid'
+       }
+       ,
+       {
+          id: 'JobTitle',
+          purpose: #HEADER,
+          type: #DATAPOINT_REFERENCE,
+          position: 20,
+          targetQualifier: 'JobTitle'
+       }
+       ,
+       {
+          id: 'JobType',
+          purpose: #HEADER,
+          type: #DATAPOINT_REFERENCE,
+          position: 30,
+          targetQualifier: 'JobType'
+       }
+       ,
+       {
+          id: 'DepartmentId',
+          purpose: #HEADER,
+          type: #DATAPOINT_REFERENCE,
+          position: 40,
+          targetQualifier: 'DepartmentId'
+       }
+       ]
+
+
+      @UI: {
+              selectionField: [{ position: 10 }],
+              lineItem: [{ position: 10 }],
+              identification: [{ position: 10 }],
+              dataPoint: { qualifier: 'Jobid' , title: 'Job Id'}
+      }
+      //    @ObjectModel.text.element: [ 'JobTitle' ]
+      @EndUserText.label: 'Job Id'
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'JobId' , name: 'YHRM_F4_JOB'} }]
+  key JobId,
+      @Search.defaultSearchElement: true
+      @UI: {
+              selectionField: [{ position: 20 }],
+              lineItem: [{ position: 20 }],
+              identification: [{ position: 20}],
+              dataPoint: { qualifier: 'JobTitle' , title: 'Job Title'}
+      }
+      @EndUserText.label: 'Job Title'
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'JobTitle' , name: 'YHRM_F4_JOB'} }]
+      JobTitle,
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @UI: {
+              selectionField: [{ position: 30 }],
+              lineItem: [{ position: 30 }],
+              identification: [{ position: 30 }],
+              dataPoint: { qualifier: 'JobType' , title: 'Job Type'}
+      }
+      @EndUserText.label: 'Job Type'
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'JobType' , name: 'YHRM_F4_JOB'} }]
+      @UI.fieldGroup: [{ position: 26 ,label: 'Attendance %',
+                cssDefault.width: '7rem',
+                type: #AS_CHART,
+                valueQualifier: 'chartJobType'
+                }]
+      JobType,
+      @Search.defaultSearchElement: true
+      @Search.fuzzinessThreshold: 0.8
+      @UI: {
+              selectionField: [{ position: 40 }],
+              lineItem: [{ position: 40 }],
+              identification: [{ position: 40 }],
+              dataPoint: { qualifier: 'DepartmentId' , title: 'Department Id'}
+      }
+      @EndUserText.label: 'Department Id'
+      @ObjectModel.text.element: [ 'DepartmentName' ]
+      @Consumption.valueHelpDefinition: [{ entity: { element: 'DepartmentId' , name: 'YHRM_F4_DEPARTMENT'} }]
+      DepartmentId,
+      @UI.hidden: true
+      created_by,
+      @UI.hidden: true
+      created_at,
+      @UI.hidden: true
+      last_changed_by,
+      @UI.hidden: true
+      local_last_changed_by,
+      @UI.hidden: true
+      LocalLastChangedAt,
+      @UI.hidden: true
+      LastChangedAt,
+      @UI.hidden: true
+      DepartmentName,
+      /* Associations */
+      @Search.defaultSearchElement: true
+      _Department : redirected to parent YHRM_MU_DEPARTMENT_PROJ,
+      _DepartmentF4,
+      @Search.defaultSearchElement: true
+      _Employee   : redirected to composition child YHRM_MU_EMPLOYEE_PROJ
+}

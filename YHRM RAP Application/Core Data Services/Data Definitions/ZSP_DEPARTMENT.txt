@@ -1,0 +1,28 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Department CDS'
+@Metadata.ignorePropagatedAnnotations: true
+@ObjectModel.usageType:{
+    serviceQuality: #X,
+    sizeCategory: #S,
+    dataClass: #MIXED
+}
+define root view entity ZSP_Department as select from yhrm_department
+composition[0..*] of ZSP_EMPLOYEE as _Employee
+association[1] to yhrm_address as _Address on $projection.AddressId = _Address.address_id
+association[1] to yhrm_employee as _HOD on $projection.Hod = _HOD.emp_id
+{
+    key department_id as DepartmentId,
+    department_name as DepartmentName,
+    hod as Hod,
+    address_id as AddressId,
+    created_by as CreatedBy,
+    created_at as CreatedAt,
+    last_changed_by as LastChangedBy,
+    local_last_changed_by as LocalLastChangedBy,
+    local_last_changed_at as LocalLastChangedAt,
+    last_changed_at as LastChangedAt,
+    _Address,
+    _HOD,
+    _Employee
+}
