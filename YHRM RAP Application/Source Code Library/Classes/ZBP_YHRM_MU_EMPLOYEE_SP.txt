@@ -1,0 +1,664 @@
+CLASS zbp_yhrm_mu_employee_sp DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF yhrm_mu_department.
+ENDCLASS.
+
+
+
+CLASS ZBP_YHRM_MU_EMPLOYEE_SP IMPLEMENTATION.
+ENDCLASS.
+
+
+
+==========LOCAL TYPES===============
+
+
+
+
+
+
+CLASS lhc_yhrm_mu_employee DEFINITION INHERITING FROM cl_abap_behavior_handler.
+
+  PRIVATE SECTION.
+
+    METHODS earlynumbering_cba_timesheet FOR NUMBERING
+      IMPORTING entities FOR CREATE yhrm_mu_employee\_timesheet.
+
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR yhrm_mu_employee RESULT result.
+    METHODS validateaddress_of_employee FOR VALIDATE ON SAVE
+      IMPORTING keys FOR yhrm_mu_employee~validateaddress_of_employee.
+    METHODS updateemployeename FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR yhrm_mu_employee~updateemployeename.
+    METHODS validatesupervisor FOR VALIDATE ON SAVE
+      IMPORTING keys FOR yhrm_mu_employee~validatesupervisor.
+    METHODS validateallfields FOR VALIDATE ON SAVE
+      IMPORTING keys FOR yhrm_mu_employee~validateallfields.
+*    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+*      IMPORTING keys REQUEST requested_authorizations FOR yhrm_mu_employee RESULT result.
+
+    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+      IMPORTING keys REQUEST requested_authorizations FOR yhrm_mu_employee RESULT result.
+    METHODS createtimesheet FOR MODIFY
+      IMPORTING keys FOR ACTION yhrm_mu_employee~createtimesheet.
+
+
+ENDCLASS.
+
+CLASS lhc_yhrm_mu_employee IMPLEMENTATION.
+
+  METHOD earlynumbering_cba_timesheet.
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_employee BY \_timesheet
+    FROM CORRESPONDING #( entities )
+    RESULT DATA(lt_link_data).
+
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_group_entity>)
+                               GROUP BY <ls_group_entity>-empid.
+
+      LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_entities>) USING KEY entity
+                WHERE empid = <ls_group_entity>-empid.
+
+        LOOP AT <ls_entities>-%target ASSIGNING FIELD-SYMBOL(<ls_timesheet>).
+
+          APPEND CORRESPONDING #( <ls_timesheet> ) TO  mapped-yhrm_mu_timesheet
+                  ASSIGNING FIELD-SYMBOL(<ls_new_map_timesheet>).
+
+        ENDLOOP.
+
+      ENDLOOP.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD get_instance_features.
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_employee
+    FIELDS ( empid active gender jobid departmentid )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_employee).
+
+    result = VALUE #( FOR ls_employee IN lt_employee
+                    ( %tky = ls_employee-%tky
+                      %features-%assoc-_timesheet = COND #( WHEN ls_employee-active = 'X'
+                                                               THEN if_abap_behv=>fc-o-enabled
+                                                               ELSE if_abap_behv=>fc-o-disabled )
+
+
+                      %delete = COND #( WHEN ls_employee-gender = 'F'
+                                          THEN if_abap_behv=>fc-o-disabled
+                                          ELSE if_abap_behv=>fc-o-enabled
+                         )
+                    )
+     ).
+  ENDMETHOD.
+
+  METHOD validateaddress_of_employee.
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_employee
+    FIELDS ( addressid )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_employee).
+
+    DATA: lt_add TYPE SORTED TABLE OF yhrm_address WITH UNIQUE KEY address_id.
+
+    lt_add = CORRESPONDING #( lt_employee DISCARDING DUPLICATES MAPPING address_id = addressid ).
+    DELETE lt_add WHERE address_id IS INITIAL.
+
+    SELECT FROM yhrm_address FIELDS address_id
+    FOR ALL ENTRIES IN @lt_add
+    WHERE address_id = @lt_add-address_id
+    INTO TABLE @DATA(lt_add_db).
+
+    IF sy-subrc IS INITIAL.
+
+    ENDIF.
+
+    LOOP AT lt_employee ASSIGNING FIELD-SYMBOL(<ls_employee>).
+
+      IF <ls_employee>-addressid IS INITIAL
+          OR NOT line_exists( lt_add_db[ address_id = <ls_employee>-addressid ] ).
+
+
+        APPEND VALUE #( %tky = <ls_employee>-%tky )
+            TO failed-yhrm_mu_employee.
+        APPEND VALUE #( %tky = <ls_employee>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'AddressId not exists, Select a valid AddressId.'
+                              )
+                        %element-addressid = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_employee.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD updateemployeename.
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_employee
+    FIELDS ( gender firstname ) WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_employee).
+
+    LOOP AT lt_employee ASSIGNING FIELD-SYMBOL(<lfs_employee>).
+
+      DATA: lv_firstname TYPE string.
+
+      lv_firstname = <lfs_employee>-firstname.
+
+      IF lv_firstname CP 'Mr.*' OR lv_firstname CP 'Mrs.*'.
+        SPLIT lv_firstname AT ' ' INTO TABLE DATA(lt_name_parts).
+        DELETE lt_name_parts INDEX 1.
+        CONCATENATE LINES OF lt_name_parts INTO lv_firstname SEPARATED BY space.
+      ENDIF.
+
+      IF <lfs_employee>-gender EQ 'M'.
+        MODIFY ENTITIES OF yhrm_mu_department
+        IN LOCAL MODE
+        ENTITY yhrm_mu_employee
+        UPDATE FIELDS ( firstname )
+        WITH VALUE #( (
+          %tky-empid = <lfs_employee>-%tky-empid
+          firstname = |Mr. { lv_firstname }|
+        ) ).
+
+      ELSEIF <lfs_employee>-gender = 'F'.
+        MODIFY ENTITIES OF yhrm_mu_department
+        IN LOCAL MODE
+        ENTITY yhrm_mu_employee
+        UPDATE FIELDS ( firstname )
+        WITH VALUE #( (
+          %tky-empid = <lfs_employee>-%tky-empid
+          firstname = |Mrs. { lv_firstname }|
+        ) ).
+
+      ENDIF.
+
+    ENDLOOP.
+
+
+  ENDMETHOD.
+
+  METHOD validatesupervisor.
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_employee
+    FIELDS ( supervisorid )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_employee).
+
+    DATA: lt_supervisor TYPE SORTED TABLE OF yhrm_employee WITH UNIQUE KEY emp_id.
+
+    lt_supervisor = CORRESPONDING #( lt_employee DISCARDING DUPLICATES MAPPING emp_id = supervisorid ).
+    DELETE lt_supervisor WHERE emp_id IS INITIAL.
+
+    SELECT FROM yhrm_employee FIELDS emp_id, active
+    FOR ALL ENTRIES IN @lt_supervisor
+    WHERE emp_id = @lt_supervisor-emp_id
+    INTO TABLE @DATA(lt_supervisor_db).
+
+    IF sy-subrc IS INITIAL.
+
+    ENDIF.
+
+    LOOP AT lt_employee ASSIGNING FIELD-SYMBOL(<ls_employee>).
+
+      IF <ls_employee>-supervisorid IS INITIAL
+          OR NOT ( line_exists( lt_supervisor_db[ emp_id = <ls_employee>-supervisorid ] )
+          AND line_exists( lt_supervisor_db[ active = 'X' ] ) ).
+
+        APPEND VALUE #( %tky = <ls_employee>-%tky )
+            TO failed-yhrm_mu_employee.
+        APPEND VALUE #( %tky = <ls_employee>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Supervisor not exists or is not active, Select a valid and active Supervisor.'
+                              )
+                        %element-supervisorid = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_employee.
+      ENDIF.
+
+
+    ENDLOOP.
+
+
+
+  ENDMETHOD.
+
+  METHOD validateallfields.
+    READ ENTITIES OF yhrm_mu_department
+      IN LOCAL MODE
+      ENTITY yhrm_mu_employee
+      FIELDS ( firstname email dob gender phoneno active hiredate resigndate )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_employee).
+
+
+    LOOP AT lt_employee ASSIGNING FIELD-SYMBOL(<ls_employee>).
+
+      IF <ls_employee>-firstname IS INITIAL .
+
+        APPEND VALUE #( %tky = <ls_employee>-%tky )
+            TO failed-yhrm_mu_employee.
+        APPEND VALUE #( %tky = <ls_employee>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Please enter a Employee First Name'
+                              )
+                        %element-firstname = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_employee.
+      ENDIF.
+
+      IF <ls_employee>-dob IS INITIAL .
+
+        APPEND VALUE #( %tky = <ls_employee>-%tky )
+            TO failed-yhrm_mu_employee.
+        APPEND VALUE #( %tky = <ls_employee>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Please enter a Date of Birth'
+                              )
+                        %element-dob = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_employee.
+      ENDIF.
+
+      IF <ls_employee>-gender IS INITIAL .
+
+        APPEND VALUE #( %tky = <ls_employee>-%tky )
+            TO failed-yhrm_mu_employee.
+        APPEND VALUE #( %tky = <ls_employee>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Please select a gender'
+                              )
+                        %element-gender = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_employee.
+      ENDIF.
+
+      DATA: lv_phone_no_string TYPE string.
+      IF <ls_employee>-phoneno IS NOT INITIAL .
+
+        SHIFT <ls_employee>-phoneno LEFT DELETING LEADING '0'.
+
+        lv_phone_no_string = <ls_employee>-phoneno.
+
+        IF strlen( lv_phone_no_string ) <> 10.
+
+          APPEND VALUE #( %tky = <ls_employee>-%tky )
+              TO failed-yhrm_mu_employee.
+          APPEND VALUE #( %tky = <ls_employee>-%tky
+                          %msg = new_message_with_text(
+                                severity = if_abap_behv_message=>severity-error
+                                text = 'Phone number should be exactly 10 digits.'
+                                )
+                          %element-phoneno = if_abap_behv=>mk-on
+
+              ) TO reported-yhrm_mu_employee.
+        ENDIF.
+      ENDIF.
+
+
+      IF <ls_employee>-email IS NOT INITIAL AND NOT ( <ls_employee>-email CS '@' AND <ls_employee>-email CS '.' ) .
+
+        APPEND VALUE #( %tky = <ls_employee>-%tky )
+            TO failed-yhrm_mu_employee.
+        APPEND VALUE #( %tky = <ls_employee>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Please enter a valid Email'
+                              )
+                        %element-email = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_employee.
+      ENDIF.
+
+      IF <ls_employee>-active = 'X' AND <ls_employee>-hiredate IS INITIAL.
+        APPEND VALUE #( %tky = <ls_employee>-%tky )
+            TO failed-yhrm_mu_employee.
+        APPEND VALUE #( %tky = <ls_employee>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Hire date is required for active employees.'
+                              )
+                        %element-hiredate = if_abap_behv=>mk-on
+            ) TO reported-yhrm_mu_employee.
+      ENDIF.
+
+      IF <ls_employee>-resigndate IS NOT INITIAL AND <ls_employee>-active = 'X'.
+        APPEND VALUE #( %tky = <ls_employee>-%tky )
+            TO failed-yhrm_mu_employee.
+        APPEND VALUE #( %tky = <ls_employee>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Active employees should not have a resignation date.'
+                              )
+                        %element-active = if_abap_behv=>mk-on
+                        %element-resigndate = if_abap_behv=>mk-on
+            ) TO reported-yhrm_mu_employee.
+      ENDIF.
+
+    ENDLOOP.
+
+
+  ENDMETHOD.
+
+
+*  METHOD get_instance_authorizations.
+*
+*  ENDMETHOD.
+
+  " Correct create timesheet
+*  METHOD createtimesheet.
+*
+*    DATA: lt_timesheets TYPE TABLE FOR CREATE yhrm_mu_employee\_timesheet.
+*
+*    " Read the employees for which we need to create timesheets
+*    READ ENTITIES OF yhrm_mu_department IN LOCAL MODE
+*      ENTITY yhrm_mu_employee
+*        FIELDS ( empid departmentid )
+*        WITH CORRESPONDING #( keys )
+*      RESULT DATA(lt_employees)
+*      FAILED failed.
+*
+*    " Check for failed reads
+*    IF failed IS NOT INITIAL.
+*      APPEND VALUE #( %msg = new_message_with_text(
+*        severity = if_abap_behv_message=>severity-error
+*        text = 'Error reading employee data.' )
+*      ) TO reported-yhrm_mu_employee.
+*      RETURN.
+*    ENDIF.
+*
+*    " Get the input parameters (assuming they're passed in the first key)
+*    DATA(ls_timesheet_data) = keys[ 1 ]-%param.
+*
+*    " Create time sheet entries for each employee
+*    LOOP AT lt_employees ASSIGNING FIELD-SYMBOL(<ls_employee>).
+*
+*     DATA(lv_cid) = keys[ 1 ]-%cid.
+*
+*      " Prepare the time sheet entry
+*      APPEND VALUE #(
+*        %cid_ref = keys[ 1 ]-%cid_ref
+*        empid = <ls_employee>-empid
+*        %target = VALUE #( (
+*          %cid = keys[ 1 ]-%cid
+*          empid = <ls_employee>-empid
+*          ydate = ls_timesheet_data-ydate
+*          available = ls_timesheet_data-available
+*          workinghours = ls_timesheet_data-workinghours
+*          leavetype = ls_timesheet_data-leavetype
+*          overtimehrs = ls_timesheet_data-overtimehrs
+*          approvedby = ls_timesheet_data-approvedby
+*          departmentid = <ls_employee>-departmentid
+*        ) )
+*      ) TO lt_timesheets.
+*    ENDLOOP.
+*
+*    " Create the timesheet entries
+*    MODIFY ENTITIES OF yhrm_mu_department IN LOCAL MODE
+*      ENTITY yhrm_mu_employee CREATE BY \_timesheet
+*      FIELDS ( empid ydate available workinghours leavetype overtimehrs approvedby departmentid )
+*      WITH lt_timesheets
+*      MAPPED DATA(ls_mapped)
+*      FAILED DATA(ls_failed)
+*      REPORTED DATA(ls_reported).
+*
+*    " Handle failures
+*    IF ls_failed-yhrm_mu_timesheet IS NOT INITIAL.
+*      APPEND VALUE #( %msg = new_message_with_text(
+*        severity = if_abap_behv_message=>severity-error
+*        text = 'Error creating timesheet entries.' )
+*      ) TO reported-yhrm_mu_employee.
+*    ENDIF.
+*
+*
+*
+*  ENDMETHOD.
+
+  METHOD createtimesheet.
+    DATA: lt_timesheets TYPE TABLE FOR CREATE yhrm_mu_employee\_timesheet,
+          lt_approver   TYPE SORTED TABLE OF yhrm_employee WITH UNIQUE KEY emp_id.
+
+    " Read the employees for which we need to create timesheets
+    READ ENTITIES OF yhrm_mu_department IN LOCAL MODE
+      ENTITY yhrm_mu_employee
+        FIELDS ( empid departmentid hiredate active )
+        WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_employees)
+      FAILED failed.
+
+    IF failed IS NOT INITIAL.
+      APPEND VALUE #( %msg = new_message_with_text(
+        severity = if_abap_behv_message=>severity-error
+        text = 'Error reading employee data.' )
+      ) TO reported-yhrm_mu_employee.
+      RETURN.
+    ENDIF.
+
+    DATA(ls_timesheet_data) = keys[ 1 ]-%param.
+
+      SELECT FROM yhrm_employee FIELDS emp_id, active
+        WHERE emp_id = @ls_timesheet_data-ApprovedBy
+        INTO TABLE @DATA(lt_approver_db).
+
+    LOOP AT lt_employees ASSIGNING FIELD-SYMBOL(<ls_employee>).
+      DATA(lv_is_valid) = abap_true.
+
+      IF <ls_employee>-active <> 'X'.
+        lv_is_valid = abap_false.
+        APPEND VALUE #( %tky = <ls_employee>-%tky
+                        %msg = new_message_with_text(
+                          severity = if_abap_behv_message=>severity-warning
+                          text = |Employee { <ls_employee>-empid } is not active. Timesheet cannot be created.|
+                        )
+                        %element-empid = if_abap_behv=>mk-on
+                        %op-%action-createtimesheet = if_abap_behv=>mk-on
+        ) TO reported-yhrm_mu_employee.
+      ELSE.
+
+        " Approver validation
+        IF ls_timesheet_data-approvedby IS INITIAL.
+          lv_is_valid = abap_false.
+          APPEND VALUE #( %tky = <ls_employee>-%tky
+                          %msg = new_message_with_text(
+                            severity = if_abap_behv_message=>severity-error
+                            text = 'Please enter an Approver. Select a valid and active approver.'
+                          )
+                          %element-empid = if_abap_behv=>mk-on
+                          %op-%action-createtimesheet = if_abap_behv=>mk-on
+          ) TO reported-yhrm_mu_employee.
+        ELSEIF
+             NOT ( line_exists( lt_approver_db[ emp_id = keys[ 1 ]-%param-ApprovedBy ] )
+             or not line_exists( lt_approver_db[ active = 'X' ] ) ).
+          lv_is_valid = abap_false.
+          APPEND VALUE #( %tky = <ls_employee>-%tky
+                          %msg = new_message_with_text(
+                            severity = if_abap_behv_message=>severity-error
+                            text = 'Approver not exists or inactive. Select a valid and active approver.'
+                          )
+                          %element-empid = if_abap_behv=>mk-on
+                          %op-%action-createtimesheet = if_abap_behv=>mk-on
+          ) TO reported-yhrm_mu_employee.
+
+        ENDIF.
+
+
+        " Timesheet date validation
+        IF ls_timesheet_data-ydate IS INITIAL OR ls_timesheet_data-ydate <= <ls_employee>-hiredate.
+          lv_is_valid = abap_false.
+          APPEND VALUE #( %tky = <ls_employee>-%tky
+                          %msg = new_message_with_text(
+                            severity = if_abap_behv_message=>severity-error
+                            text = 'Timesheet date is mandatory and should be after Hiredate.'
+                          )
+                          %element-empid = if_abap_behv=>mk-on
+                          %op-%action-createtimesheet = if_abap_behv=>mk-on
+          ) TO reported-yhrm_mu_employee.
+        ENDIF.
+
+        " Working hours validation
+        IF ls_timesheet_data-workinghours > 8.
+          lv_is_valid = abap_false.
+          APPEND VALUE #( %tky = <ls_employee>-%tky
+                          %msg = new_message_with_text(
+                            severity = if_abap_behv_message=>severity-error
+                            text = 'Please enter Working Hours, It should not exceed 8 hours'
+                          )
+                          %element-empid = if_abap_behv=>mk-on
+                          %op-%action-createtimesheet = if_abap_behv=>mk-on
+          ) TO reported-yhrm_mu_employee.
+        ENDIF.
+
+        " Overtime hours validation
+        IF ls_timesheet_data-overtimehrs > 6.
+          lv_is_valid = abap_false.
+          APPEND VALUE #( %tky = <ls_employee>-%tky
+                          %msg = new_message_with_text(
+                            severity = if_abap_behv_message=>severity-error
+                            text = 'Overtime hours should not exceed 6 hours'
+                          )
+                          %element-empid = if_abap_behv=>mk-on
+                          %op-%action-createtimesheet = if_abap_behv=>mk-on
+          ) TO reported-yhrm_mu_employee.
+        ENDIF.
+
+        " Employee availability validations
+        IF ls_timesheet_data-available = abap_false.
+          " If employee not available, overtime hours must be 0
+          IF ls_timesheet_data-overtimehrs <> 0.
+            lv_is_valid = abap_false.
+            APPEND VALUE #( %tky = <ls_employee>-%tky
+                            %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'If employee not available, overtime hours must be 0.'
+                            )
+                            %element-empid = if_abap_behv=>mk-on
+                            %op-%action-createtimesheet = if_abap_behv=>mk-on
+            ) TO reported-yhrm_mu_employee.
+          ENDIF.
+
+          " If employee not available, Working hours must be 0
+          IF ls_timesheet_data-workinghours <> 0.
+            lv_is_valid = abap_false.
+            APPEND VALUE #( %tky = <ls_employee>-%tky
+                            %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'If employee not available, Working hours must be 0.'
+                            )
+                            %element-empid = if_abap_behv=>mk-on
+                            %op-%action-createtimesheet = if_abap_behv=>mk-on
+            ) TO reported-yhrm_mu_employee.
+          ENDIF.
+
+          " If employee not available, Leave type should be mandatory
+          IF ls_timesheet_data-leavetype IS INITIAL.
+            lv_is_valid = abap_false.
+            APPEND VALUE #( %tky = <ls_employee>-%tky
+                            %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'If employee not available, Leave type should be mandatory.'
+                            )
+                            %element-empid = if_abap_behv=>mk-on
+                            %op-%action-createtimesheet = if_abap_behv=>mk-on
+            ) TO reported-yhrm_mu_employee.
+          ENDIF.
+        ELSE.
+          " If employee is available, Leave type should be none
+          IF ls_timesheet_data-leavetype IS NOT INITIAL.
+            lv_is_valid = abap_false.
+            APPEND VALUE #( %tky = <ls_employee>-%tky
+                            %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'If employee is available, Leave type should be none.'
+                            )
+                            %element-empid = if_abap_behv=>mk-on
+                            %op-%action-createtimesheet = if_abap_behv=>mk-on
+            ) TO reported-yhrm_mu_employee.
+          ENDIF.
+
+          " If employee is available then working hours must be more than 0
+          IF ls_timesheet_data-workinghours <= 0.
+            lv_is_valid = abap_false.
+            APPEND VALUE #( %tky = <ls_employee>-%tky
+                            %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'If employee is available then working hours must be more than 0.'
+                            )
+                            %element-empid = if_abap_behv=>mk-on
+                            %op-%action-createtimesheet = if_abap_behv=>mk-on
+            ) TO reported-yhrm_mu_employee.
+          ENDIF.
+        ENDIF.
+
+      ENDIF.
+
+      IF lv_is_valid = abap_true.
+        APPEND VALUE #(
+          %cid_ref = keys[ 1 ]-%cid_ref
+          empid = <ls_employee>-empid
+          %target = VALUE #( (
+            %cid = keys[ 1 ]-%cid
+            empid = <ls_employee>-empid
+            ydate = ls_timesheet_data-ydate
+            available = ls_timesheet_data-available
+            workinghours = ls_timesheet_data-workinghours
+            leavetype = ls_timesheet_data-leavetype
+            overtimehrs = ls_timesheet_data-overtimehrs
+            approvedby = ls_timesheet_data-approvedby
+            departmentid = <ls_employee>-departmentid
+          ) )
+        ) TO lt_timesheets.
+      ELSE.
+        APPEND VALUE #( %tky = <ls_employee>-%tky ) TO failed-yhrm_mu_employee.
+      ENDIF.
+    ENDLOOP.
+
+    IF lt_timesheets IS NOT INITIAL.
+      MODIFY ENTITIES OF yhrm_mu_department IN LOCAL MODE
+        ENTITY yhrm_mu_employee CREATE BY \_timesheet
+        FIELDS ( empid ydate available workinghours leavetype overtimehrs approvedby departmentid )
+        WITH lt_timesheets
+        MAPPED DATA(ls_mapped)
+        FAILED DATA(ls_failed)
+        REPORTED DATA(ls_reported).
+
+      IF ls_failed-yhrm_mu_timesheet IS NOT INITIAL.
+        APPEND VALUE #( %msg = new_message_with_text(
+          severity = if_abap_behv_message=>severity-error
+          text = 'Error creating timesheet entries.' )
+        ) TO reported-yhrm_mu_employee.
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
+
+
+
+
+
+
+
+
+
+
+
+  METHOD get_instance_authorizations.
+  ENDMETHOD.
+
+ENDCLASS.

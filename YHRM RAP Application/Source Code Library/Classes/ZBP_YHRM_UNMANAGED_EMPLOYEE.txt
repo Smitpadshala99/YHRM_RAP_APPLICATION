@@ -1,13 +1,3 @@
-CLASS zbp_yhrm_unmanged_employee DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF yhrm_u_employee.
-ENDCLASS.
-
-CLASS zbp_yhrm_unmanged_employee IMPLEMENTATION.
-ENDCLASS.
-
-
-======== LOCAL TYPES =======
-
-
 * lhc_employee stands for Local Handler Class for Employee Entity
 CLASS lhc_employee DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
@@ -44,8 +34,17 @@ CLASS lhc_employee DEFINITION INHERITING FROM cl_abap_behavior_handler.
     METHODS cba_timesheet FOR MODIFY
       IMPORTING entities_cba FOR CREATE employee\_timesheet.
 
+    METHODS validate_fields FOR VALIDATE ON SAVE
+      IMPORTING keys FOR employee~validate_fields.
+
+    METHODS updateemployeename FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR employee~updateemployeename.
+    METHODS updateemployeestatus FOR MODIFY
+      IMPORTING keys FOR ACTION employee~updateemployeestatus RESULT result.
+
     METHODS earlynumbering_cba_timesheet FOR NUMBERING
       IMPORTING entities FOR CREATE employee\_timesheet.
+
 
 ENDCLASS.
 
@@ -193,6 +192,186 @@ CLASS lhc_employee IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD validate_fields.
+
+    READ ENTITIES OF yhrm_U_EMPLOYEE
+    IN LOCAL MODE
+    ENTITY employee
+    ALL FIELDS WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_employee_tmp)
+    REPORTED DATA(lt_reported)
+    FAILED DATA(lt_failed).
+
+    IF NOT lt_employee_tmp[] is INITIAL.
+
+        READ TABLE lt_employee_tmp ASSIGNING FIELD-SYMBOL(<lfs_employee_tmp>) index 1.
+        if <lfs_employee_tmp> is ASSIGNED.
+
+            reported-employee = VALUE #(
+                ( %tky = <lfs_employee_tmp>-%tky %state_area = 'VALIDATE_FNM' )
+                ( %tky = <lfs_employee_tmp>-%tky %state_area = 'VALIDATE_GENDER' )
+                ( %tky = <lfs_employee_tmp>-%tky %state_area = 'VALIDATE_DOB' )
+                ( %tky = <lfs_employee_tmp>-%tky %state_area = 'VALIDATE_EMAIL' )
+                ).
+
+            if <lfs_employee_tmp>-FirstName is INITIAL or
+                <lfs_employee_tmp>-Email is INITIAL or
+                <lfs_employee_tmp>-Dob is INITIAL or
+                <lfs_employee_tmp>-Gender is INITIAL.
+
+                failed-employee = VALUE #( ( %tky = <lfs_employee_tmp>-%tky ) ).
+
+
+                IF <lfs_employee_tmp>-FirstName is INITIAL.
+
+                    reported-employee = VALUE #( (
+                        %tky = <lfs_employee_tmp>-%tky
+                        %state_area = 'VALIDATE_FNM'
+                        %element-firstname = if_abap_behv=>mk-on
+                        %msg = new_message(
+                            id = 'SY'
+                            number = '002'
+                            severity = if_abap_behv_message=>severity-error
+                            v1 = 'FirstName is Required!'
+                        )
+                     ) ).
+                ENDIF.
+
+                IF <lfs_employee_tmp>-Gender is INITIAL.
+
+                    reported-employee = VALUE #( BASE reported-employee (
+                        %tky = <lfs_employee_tmp>-%tky
+                        %state_area = 'VALIDATE_GENDER'
+                        %element-gender = if_abap_behv=>mk-on
+                        %msg = new_message(
+                            id = 'SY'
+                            number = '002'
+                            severity = if_abap_behv_message=>severity-error
+                            v1 = 'Gender is Required!'
+                        )
+                     ) ).
+                ENDIF.
+
+                IF <lfs_employee_tmp>-Dob is INITIAL.
+
+                    reported-employee = VALUE #( BASE reported-employee (
+                        %tky = <lfs_employee_tmp>-%tky
+                        %state_area = 'VALIDATE_DOB'
+                        %element-dob = if_abap_behv=>mk-on
+                        %msg = new_message(
+                            id = 'SY'
+                            number = '002'
+                            severity = if_abap_behv_message=>severity-error
+                            v1 = 'Date of Birth is Required!'
+                        )
+                     ) ).
+                ENDIF.
+
+                IF <lfs_employee_tmp>-Email is INITIAL.
+
+                    reported-employee = VALUE #( BASE reported-employee (
+                        %tky = <lfs_employee_tmp>-%tky
+                        %state_area = 'VALIDATE_EMAIL'
+                        %element-email = if_abap_behv=>mk-on
+                        %msg = new_message(
+                            id = 'SY'
+                            number = '002'
+                            severity = if_abap_behv_message=>severity-error
+                            v1 = 'Email is Required!'
+                        )
+                     ) ).
+                ENDIF.
+
+            ENDIF.
+
+        ENDIF.
+
+
+    ENDIF.
+
+  ENDMETHOD.
+
+    METHOD updateemployeename.
+      READ ENTITIES OF yhrm_U_EMPLOYEE
+      IN LOCAL MODE
+      ENTITY employee
+      FIELDS ( Gender ) WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_employee).
+
+      LOOP at lt_employee ASSIGNING FIELD-SYMBOL(<lfs_employee>).
+
+        DATA: lv_firstname TYPE string.
+
+        lv_firstname = <lfs_employee>-FirstName.
+
+        IF lv_firstname CP 'Mr.*' OR lv_firstname CP 'Mrs.*'.
+          SPLIT lv_firstname AT ' ' INTO TABLE DATA(lt_name_parts).
+          DELETE lt_name_parts INDEX 1.
+          CONCATENATE LINES OF lt_name_parts INTO lv_firstname SEPARATED BY SPACE.
+        ENDIF.
+
+        IF <lfs_employee>-Gender EQ 'M'.
+          MODIFY ENTITIES OF yhrm_U_EMPLOYEE
+          IN LOCAL MODE
+          ENTITY Employee
+          UPDATE FIELDS ( FirstName )
+          WITH VALUE #( (
+            %tky = <lfs_employee>-%tky
+            FirstName = |Mr. { lv_firstname }|
+          ) ).
+
+        ELSEIF <lfs_employee>-Gender = 'F'.
+          MODIFY ENTITIES OF yhrm_U_EMPLOYEE
+          IN LOCAL MODE
+          ENTITY Employee
+          UPDATE FIELDS ( FirstName )
+          WITH VALUE #( (
+            %tky = <lfs_employee>-%tky
+            FirstName = |Mrs. { lv_firstname }|
+          ) ).
+
+        ENDIF.
+
+      ENDLOOP.
+
+    ENDMETHOD.
+
+
+
+  METHOD updateEmployeeStatus.
+
+    DATA(lt_keys) = keys.
+
+    READ ENTITIES OF yhrm_U_EMPLOYEE
+    IN LOCAL MODE
+    ENTITY Employee
+    FIELDS ( Active ) WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_employee_status).
+
+    DATA(lv_new_status) = lt_keys[ 1 ]-%param-active.
+
+    MODIFY ENTITIES OF yhrm_U_EMPLOYEE
+    in LOCAL MODE
+    ENTITY Employee
+    UPDATE FIELDS ( Active )
+    WITH VALUE #( (
+        %tky = lt_employee_status[ 1 ]-%tky Active = lv_new_status
+    ) ).
+
+    READ ENTITIES OF yhrm_U_EMPLOYEE
+    IN LOCAL MODE
+    ENTITY Employee
+    ALL FIELDS WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_employee).
+
+    result = VALUE #( FOR <lfs_employee> in lt_employee (
+        %tky = <lfs_employee>-%tky
+        %param = <lfs_employee>
+     ) ).
+
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS lhc_timesheet DEFINITION INHERITING FROM cl_abap_behavior_handler.
@@ -209,6 +388,9 @@ CLASS lhc_timesheet DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS rba_employee FOR READ
       IMPORTING keys_rba FOR READ timesheet\_employee FULL result_requested RESULT result LINK association_links.
+
+    METHODS updatehours FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR timesheet~updatehours.
 
 ENDCLASS.
 
@@ -229,6 +411,40 @@ CLASS lhc_timesheet IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD rba_employee.
+  ENDMETHOD.
+
+  METHOD updateHours.
+    READ ENTITIES OF yhrm_U_EMPLOYEE
+      IN LOCAL MODE
+      ENTITY Timesheet
+      FIELDS ( Available ) WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_timesheet).
+
+      LOOP at lt_timesheet ASSIGNING FIELD-SYMBOL(<lfs_timesheet>).
+        IF <lfs_timesheet>-Available EQ 'X'.
+          MODIFY ENTITIES OF yhrm_U_EMPLOYEE
+          IN LOCAL MODE
+          ENTITY Timesheet
+          UPDATE FIELDS ( Leavetype )
+          WITH VALUE #( (
+            %tky = <lfs_timesheet>-%tky
+            Leavetype = ''
+          ) ).
+
+        ELSE.
+          MODIFY ENTITIES OF yhrm_U_EMPLOYEE
+          IN LOCAL MODE
+          ENTITY Timesheet
+          UPDATE FIELDS ( Workinghours OvertimeHrs )
+          WITH VALUE #( (
+            %tky = <lfs_timesheet>-%tky
+            Workinghours = 0
+            OvertimeHrs = 0
+          ) ).
+        ENDIF.
+
+      ENDLOOP.
+
   ENDMETHOD.
 
 ENDCLASS.
@@ -259,7 +475,8 @@ CLASS lsc_yhrm_u_employee IMPLEMENTATION.
             gt_timesheet_tmp TYPE STANDARD TABLE OF yhrm_timesheet,
             lv_age TYPE i,
             lv_hire_date TYPE d,
-            lv_dob TYPE d.
+            lv_dob TYPE d,
+            lv_phone_no_string TYPE string.
 
 
 
@@ -289,17 +506,17 @@ CLASS lsc_yhrm_u_employee IMPLEMENTATION.
                          ) TO reported-employee.
           ENDIF.
 
-          " Check if hire date is after 16 years from DOB
-          IF <lfs_employee_tmp>-dob IS NOT INITIAL AND <lfs_employee_tmp>-hire_date <= lv_hire_date.
-            APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id
-                            %msg = new_message_with_text(
-                                severity = if_abap_behv_message=>severity-error
-                                text = 'Hire date should be after 16 years from DOB.'
-                                )
-                         ) TO reported-employee.
-          ENDIF.
 
-            IF <lfs_employee_tmp>-email IS NOT INITIAL AND ( NOT <lfs_employee_tmp>-email CO '@.' OR <lfs_employee_tmp>-email CS ' ' ).
+              IF <lfs_employee_tmp>-hire_date IS NOT INITIAL and <lfs_employee_tmp>-hire_date <= lv_hire_date.
+                APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id
+                                %msg = new_message_with_text(
+                                    severity = if_abap_behv_message=>severity-error
+                                    text = 'Hire date should be after 16 years from DOB.'
+                                    )
+                             ) TO reported-employee.
+              ENDIF.
+
+            IF <lfs_employee_tmp>-email IS NOT INITIAL AND <lfs_employee_tmp>-email CS '@. ' .
               APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id ) to failed-employee.
 
               APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id
@@ -310,15 +527,22 @@ CLASS lsc_yhrm_u_employee IMPLEMENTATION.
                            ) to reported-employee.
             ENDIF.
 
-            IF <lfs_employee_tmp>-phone_no IS NOT INITIAL AND strlen( <lfs_employee_tmp>-phone_no ) ne 10.
-              APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id ) to failed-employee.
+            IF <lfs_employee_tmp>-phone_no IS NOT INITIAL.
 
-              APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id
-                              %msg = new_message_with_text(
-                                  severity = if_abap_behv_message=>severity-error
-                                  text = 'Phone number should be exactly 10 digits.'
-                                  )
-                           ) to reported-employee.
+              SHIFT <lfs_employee_tmp>-phone_no LEFT DELETING LEADING '0'.
+
+              lv_phone_no_string = <lfs_employee_tmp>-phone_no.
+
+              IF strlen( lv_phone_no_string ) <> 10.
+
+                APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id ) to failed-employee.
+                APPEND VALUE #( empid = <lfs_employee_tmp>-emp_id
+                                %msg = new_message_with_text(
+                                    severity = if_abap_behv_message=>severity-error
+                                    text = 'Phone number should be exactly 10 digits.'
+                                    )
+                             ) to reported-employee.
+              ENDIF.
             ENDIF.
         ENDIF.
       ENDIF.

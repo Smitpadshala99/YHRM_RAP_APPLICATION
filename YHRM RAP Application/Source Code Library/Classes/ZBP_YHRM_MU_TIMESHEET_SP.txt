@@ -1,0 +1,509 @@
+CLASS zbp_yhrm_mu_timesheet_sp DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF yhrm_mu_department.
+ENDCLASS.
+
+CLASS zbp_yhrm_mu_timesheet_sp IMPLEMENTATION.
+ENDCLASS.
+
+
+
+
+==========LOCAL TYPES========
+CLASS lhc_yhrm_mu_timesheet DEFINITION INHERITING FROM cl_abap_behavior_handler.
+
+  PRIVATE SECTION.
+
+    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+      IMPORTING keys REQUEST requested_authorizations FOR yhrm_mu_timesheet RESULT result.
+
+    METHODS availableyes FOR MODIFY
+      IMPORTING keys FOR ACTION yhrm_mu_timesheet~availableyes RESULT result.
+
+    METHODS availableno FOR MODIFY
+      IMPORTING keys FOR ACTION yhrm_mu_timesheet~availableno RESULT result.
+
+    METHODS calculateweeklyhours FOR MODIFY
+      IMPORTING keys FOR ACTION yhrm_mu_timesheet~calculateweeklyhours.
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR yhrm_mu_timesheet RESULT result.
+    METHODS validatetimesheet FOR VALIDATE ON SAVE
+      IMPORTING keys FOR yhrm_mu_timesheet~validatetimesheet.
+*    METHODS createtimesheet FOR MODIFY
+*      IMPORTING keys FOR ACTION yhrm_mu_timesheet~createtimesheet RESULT result.
+*    METHODS createtimesheet FOR MODIFY
+*      IMPORTING keys FOR ACTION yhrm_mu_timesheet~createtimesheet RESULT result.
+
+ENDCLASS.
+
+CLASS lhc_yhrm_mu_timesheet IMPLEMENTATION.
+
+  METHOD get_instance_authorizations.
+  ENDMETHOD.
+
+  METHOD availableyes.
+    MODIFY ENTITIES OF yhrm_mu_department IN LOCAL MODE
+      ENTITY yhrm_mu_timesheet
+      UPDATE FIELDS ( available leavetype workinghours )
+      WITH VALUE #( FOR ls_keys IN keys ( %tky = ls_keys-%tky
+                                          available = 'X'
+                                          leavetype = ''
+                                          workinghours = 8
+                                          ) ).
+
+    READ ENTITIES OF yhrm_mu_department IN LOCAL MODE
+      ENTITY yhrm_mu_timesheet
+      ALL FIELDS WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_result).
+
+    result  = VALUE #( FOR ls_result IN lt_result ( %tky = ls_result-%tky
+                                                   %param  =  ls_result ) ).
+  ENDMETHOD.
+
+  METHOD availableno.
+
+    MODIFY ENTITIES OF yhrm_mu_department IN LOCAL MODE
+    ENTITY yhrm_mu_timesheet
+    UPDATE FIELDS ( Available Workinghours OvertimeHrs Leavetype )
+    WITH VALUE #( FOR ls_keys IN keys ( %tky = ls_keys-%tky
+                                        Available = ''
+                                        Workinghours = 0
+                                        OvertimeHrs = 0
+                                        Leavetype = 'EL'
+                                        ) ).
+
+    READ ENTITIES OF yhrm_mu_department IN LOCAL MODE
+      ENTITY yhrm_mu_timesheet
+      ALL FIELDS WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_result).
+
+    result  = VALUE #( FOR ls_result IN lt_result ( %tky = ls_result-%tky
+                                                   %param  =  ls_result ) ).
+  ENDMETHOD.
+
+  METHOD calculateweeklyhours.
+
+    DATA:
+      lv_total_hours    TYPE p DECIMALS 2,
+      lv_total_overtime TYPE p DECIMALS 2.
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_timesheet
+    FIELDS ( overtimehrs workinghours ydate empid )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_timesheet).
+
+    lv_total_hours = 0.
+    lv_total_overtime = 0.
+
+    LOOP AT lt_timesheet ASSIGNING FIELD-SYMBOL(<ls_timesheet>).
+      lv_total_hours = lv_total_hours + <ls_timesheet>-workinghours.
+      lv_total_overtime = lv_total_overtime + <ls_timesheet>-overtimehrs.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD get_instance_features.
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_employee BY \_timesheet
+    FIELDS ( departmentid ydate available empid leavetype overtimehrs workinghours )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_timesheet).
+
+    result = VALUE #( FOR ls_timesheet IN lt_timesheet
+                    ( %tky = ls_timesheet-%tky
+                      %features-%action-availableyes = COND #( WHEN ls_timesheet-available = 'X'
+                                                               THEN if_abap_behv=>fc-o-disabled
+                                                               ELSE if_abap_behv=>fc-o-enabled )
+                      %features-%action-availableno = COND #( WHEN ls_timesheet-available = ''
+                                                               THEN if_abap_behv=>fc-o-disabled
+                                                               ELSE if_abap_behv=>fc-o-enabled )
+
+                    )
+     ).
+
+
+
+  ENDMETHOD.
+
+  METHOD validatetimesheet.
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_timesheet
+    FIELDS ( OvertimeHrs Workinghours Available Leavetype ApprovedBy )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_timesheet).
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_employee
+    FIELDS ( HireDate Active )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_employee).
+
+    DATA: lt_approver TYPE SORTED TABLE OF yhrm_employee WITH UNIQUE KEY emp_id.
+
+    lt_approver = CORRESPONDING #( lt_timesheet DISCARDING DUPLICATES MAPPING emp_id = ApprovedBy ).
+    DELETE lt_approver WHERE emp_id IS INITIAL.
+
+    SELECT FROM yhrm_employee FIELDS emp_id, active
+    FOR ALL ENTRIES IN @lt_approver
+    WHERE emp_id = @lt_approver-emp_id
+    INTO TABLE @DATA(lt_approver_db).
+
+    IF sy-subrc IS INITIAL.
+
+    ENDIF.
+
+    LOOP AT lt_timesheet ASSIGNING FIELD-SYMBOL(<ls_timesheet>).
+
+      IF <ls_timesheet>-ApprovedBy IS INITIAL
+          OR NOT ( line_exists( lt_approver_db[ emp_id = <ls_timesheet>-ApprovedBy ] )
+          or not line_exists( lt_approver_db[ active = 'X' ] ) ).
+
+        APPEND VALUE #( %tky = <ls_timesheet>-%tky )
+            TO failed-yhrm_mu_timesheet.
+        APPEND VALUE #( %tky = <ls_timesheet>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Approver not exists or is not active, Select a valid and active approver.'
+                              )
+                        %element-ApprovedBy = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_timesheet.
+      ENDIF.
+
+      IF <ls_timesheet>-workinghours IS not INITIAL and <ls_timesheet>-workinghours > 8 .
+
+        APPEND VALUE #( %tky = <ls_timesheet>-%tky )
+            TO failed-yhrm_mu_timesheet.
+        APPEND VALUE #( %tky = <ls_timesheet>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Please enter a Working Hours, It should not exceed 8 hours'
+                              )
+                        %element-workinghours = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_timesheet.
+      ENDIF.
+
+      IF <ls_timesheet>-Available is INITIAL .
+        if not <ls_timesheet>-OvertimeHrs = 0.
+            APPEND VALUE #( %tky = <ls_timesheet>-%tky )
+              TO failed-yhrm_mu_timesheet.
+            APPEND VALUE #( %tky = <ls_timesheet>-%tky
+                        %msg = new_message_with_text(
+                        severity = if_abap_behv_message=>severity-error
+                          text = 'If employee not available, overtime hours must be 0.'
+                          )
+                       %element-OvertimeHrs = if_abap_behv=>mk-on
+                   ) TO reported-yhrm_mu_timesheet.
+        ENDIF.
+
+        if not <ls_timesheet>-Workinghours = 0.
+            APPEND VALUE #( %tky = <ls_timesheet>-%tky )
+              TO failed-yhrm_mu_timesheet.
+            APPEND VALUE #( %tky = <ls_timesheet>-%tky
+                        %msg = new_message_with_text(
+                        severity = if_abap_behv_message=>severity-error
+                          text = 'If employee not available, Working hours must be 0.'
+                          )
+                       %element-Workinghours = if_abap_behv=>mk-on
+                   ) TO reported-yhrm_mu_timesheet.
+        ENDIF.
+
+        IF <ls_timesheet>-Leavetype = ''.
+
+        APPEND VALUE #( %tky = <ls_timesheet>-%tky )
+              TO failed-yhrm_mu_timesheet.
+        APPEND VALUE #( %tky = <ls_timesheet>-%tky
+                        %msg = new_message_with_text(
+                        severity = if_abap_behv_message=>severity-error
+                          text = 'If employee not available, Leave type should be mandatory.'
+                          )
+                       %element-Leavetype = if_abap_behv=>mk-on
+                   ) TO reported-yhrm_mu_timesheet.
+
+        ENDIF.
+
+      ENDIF.
+
+    IF <ls_timesheet>-Available = 'X'.
+        IF <ls_timesheet>-Leavetype is not INITIAL or not <ls_timesheet>-Leavetype = ''.
+            APPEND VALUE #( %tky = <ls_timesheet>-%tky )
+                  TO failed-yhrm_mu_timesheet.
+            APPEND VALUE #( %tky = <ls_timesheet>-%tky
+                            %msg = new_message_with_text(
+                            severity = if_abap_behv_message=>severity-error
+                              text = 'If employee is available, Leave type should be none.'
+                              )
+                           %element-Workinghours = if_abap_behv=>mk-on
+                       ) TO reported-yhrm_mu_timesheet.
+        ENDIF.
+
+        if <ls_timesheet>-Workinghours < 0.
+            APPEND VALUE #( %tky = <ls_timesheet>-%tky )
+                  TO failed-yhrm_mu_timesheet.
+            APPEND VALUE #( %tky = <ls_timesheet>-%tky
+                            %msg = new_message_with_text(
+                            severity = if_abap_behv_message=>severity-error
+                              text = 'If employee is available then working hours must be more than 0.'
+                              )
+                           %element-Workinghours = if_abap_behv=>mk-on
+                       ) TO reported-yhrm_mu_timesheet.
+         ENDIF.
+      ENDIF.
+
+      IF <ls_timesheet>-OvertimeHrs > 6.
+        APPEND VALUE #( %tky = <ls_timesheet>-%tky )
+            TO failed-yhrm_mu_timesheet.
+        APPEND VALUE #( %tky = <ls_timesheet>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Overtime hours should not beyond 6 hours'
+                              )
+                        %element-overtimehrs = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_timesheet.
+      ENDIF.
+
+
+      LOOP AT lt_employee ASSIGNING FIELD-SYMBOL(<ls_employee>).
+
+    IF <ls_timesheet>-Ydate IS INITIAL or <ls_timesheet>-ydate <= <ls_employee>-HireDate.
+        APPEND VALUE #( %tky = <ls_timesheet>-%tky )
+              TO failed-yhrm_mu_timesheet.
+        APPEND VALUE #( %tky = <ls_timesheet>-%tky
+                        %msg = new_message_with_text(
+                        severity = if_abap_behv_message=>severity-error
+                          text = 'Timesheet date should be after Hiredate.'
+                          )
+                       %element-Ydate = if_abap_behv=>mk-on
+                   ) TO reported-yhrm_mu_timesheet.
+      ENDIF.
+
+  ENDLOOP.
+
+  ENDLOOP.
+
+ENDMETHOD.
+
+
+*METHOD createTimesheet.
+*
+*  DATA employee_timesheet TYPE TABLE FOR UPDATE yhrm_mu_timesheet.
+*    DATA(keys_with_valid_fields) = keys.
+*
+*    READ ENTITIES OF yhrm_mu_department
+*    IN LOCAL MODE
+*    ENTITY yhrm_mu_timesheet
+*    FIELDS ( overtimehrs workinghours available leavetype approvedby )
+*    WITH CORRESPONDING #( keys )
+*    RESULT DATA(lt_timesheet).
+*
+*    READ ENTITIES OF yhrm_mu_department
+*    IN LOCAL MODE
+*    ENTITY yhrm_mu_employee
+*    FIELDS ( hiredate active )
+*    WITH CORRESPONDING #( keys )
+*    RESULT DATA(lt_employee).
+*
+*    DATA: lt_approver TYPE SORTED TABLE OF yhrm_employee WITH UNIQUE KEY emp_id.
+*
+*    lt_approver = CORRESPONDING #( lt_timesheet DISCARDING DUPLICATES MAPPING emp_id = approvedby ).
+*    DELETE lt_approver WHERE emp_id IS INITIAL.
+*
+*    SELECT FROM yhrm_employee FIELDS emp_id, active
+*    FOR ALL ENTRIES IN @lt_approver
+*    WHERE emp_id = @lt_approver-emp_id
+*    INTO TABLE @DATA(lt_approver_db).
+*
+*    IF sy-subrc IS INITIAL.
+*
+*    ENDIF.
+*
+*    LOOP AT keys_with_valid_fields ASSIGNING FIELD-SYMBOL(<keys_with_valid_fields>).
+*
+*      IF <keys_with_valid_fields>-%param-approvedby IS INITIAL
+*          OR NOT line_exists( lt_approver_db[ emp_id = <keys_with_valid_fields>-%param-approvedby ] )
+*          OR lt_approver_db[ emp_id = <keys_with_valid_fields>-%param-approvedby ]-active <> 'X'.
+*
+*        APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky )
+*            TO failed-yhrm_mu_timesheet.
+*        APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky
+*                        %msg = new_message_with_text(
+*                              severity = if_abap_behv_message=>severity-error
+*                              text = 'Approver not exists or is not active, Select a valid and active approver.'
+*                              )
+*                        %element-approvedby = if_abap_behv=>mk-on
+*
+*            ) TO reported-yhrm_mu_timesheet.
+*      ENDIF.
+*
+*      IF <keys_with_valid_fields>-%param-workinghours IS NOT INITIAL AND <keys_with_valid_fields>-%param-workinghours > 8 .
+*
+*        APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky )
+*            TO failed-yhrm_mu_timesheet.
+*        APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky
+*                        %msg = new_message_with_text(
+*                              severity = if_abap_behv_message=>severity-error
+*                              text = 'Please enter a Working Hours, It should not exceed 8 hours'
+*                              )
+*                        %element-workinghours = if_abap_behv=>mk-on
+*
+*            ) TO reported-yhrm_mu_timesheet.
+*      ENDIF.
+*
+*      IF <keys_with_valid_fields>-%param-available IS INITIAL .
+*        IF NOT <keys_with_valid_fields>-%param-overtimehrs = 0.
+*          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky )
+*            TO failed-yhrm_mu_timesheet.
+*          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky
+*                      %msg = new_message_with_text(
+*                      severity = if_abap_behv_message=>severity-error
+*                        text = 'If employee not available, overtime hours must be 0.'
+*                        )
+*                     %element-overtimehrs = if_abap_behv=>mk-on
+*                 ) TO reported-yhrm_mu_timesheet.
+*        ENDIF.
+*
+*        IF NOT <keys_with_valid_fields>-%param-workinghours = 0.
+*          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky )
+*            TO failed-yhrm_mu_timesheet.
+*          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky
+*                      %msg = new_message_with_text(
+*                      severity = if_abap_behv_message=>severity-error
+*                        text = 'If employee not available, Working hours must be 0.'
+*                        )
+*                     %element-workinghours = if_abap_behv=>mk-on
+*                 ) TO reported-yhrm_mu_timesheet.
+*        ENDIF.
+*
+*        IF <keys_with_valid_fields>-%param-leavetype = ''.
+*
+*          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky )
+*                TO failed-yhrm_mu_timesheet.
+*          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky
+*                          %msg = new_message_with_text(
+*                          severity = if_abap_behv_message=>severity-error
+*                            text = 'If employee not available, Leave type should be mandatory.'
+*                            )
+*                         %element-leavetype = if_abap_behv=>mk-on
+*                     ) TO reported-yhrm_mu_timesheet.
+*
+*        ENDIF.
+*
+*      ENDIF.
+*
+*      IF <keys_with_valid_fields>-%param-available = 'X'.
+*        IF <keys_with_valid_fields>-%param-leavetype IS NOT INITIAL OR NOT <keys_with_valid_fields>-%param-leavetype = ''.
+*          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky )
+*                TO failed-yhrm_mu_timesheet.
+*          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky
+*                          %msg = new_message_with_text(
+*                          severity = if_abap_behv_message=>severity-error
+*                            text = 'If employee is available, Leave type should be none.'
+*                            )
+*                         %element-workinghours = if_abap_behv=>mk-on
+*                     ) TO reported-yhrm_mu_timesheet.
+*        ENDIF.
+*
+*        IF <keys_with_valid_fields>-%param-workinghours < 0 OR <keys_with_valid_fields>-%param-workinghours IS INITIAL.
+*          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky )
+*                TO failed-yhrm_mu_timesheet.
+*          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky
+*                          %msg = new_message_with_text(
+*                          severity = if_abap_behv_message=>severity-error
+*                            text = 'If employee is available then working hours must be more than 0.'
+*                            )
+*                         %element-workinghours = if_abap_behv=>mk-on
+*                     ) TO reported-yhrm_mu_timesheet.
+*        ENDIF.
+*      ENDIF.
+*
+*      IF <keys_with_valid_fields>-%param-overtimehrs > 6.
+*        APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky )
+*            TO failed-yhrm_mu_timesheet.
+*        APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky
+*                        %msg = new_message_with_text(
+*                              severity = if_abap_behv_message=>severity-error
+*                              text = 'Overtime hours should not beyond 6 hours'
+*                              )
+*                        %element-overtimehrs = if_abap_behv=>mk-on
+*
+*            ) TO reported-yhrm_mu_timesheet.
+*      ENDIF.
+*
+*
+**      LOOP AT lt_employee ASSIGNING FIELD-SYMBOL(<ls_employee>).
+**
+**        IF <keys_with_valid_fields>-%param-ydate IS INITIAL OR <keys_with_valid_fields>-%param-ydate <= <ls_employee>-hiredate.
+**          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky )
+**                TO failed-yhrm_mu_timesheet.
+**          APPEND VALUE #( %tky = <keys_with_valid_fields>-%tky
+**                          %msg = new_message_with_text(
+**                          severity = if_abap_behv_message=>severity-error
+**                            text = 'Timesheet date is mandatory and should be after Hiredate.'
+**                            )
+**                         %element-ydate = if_abap_behv=>mk-on
+**                     ) TO reported-yhrm_mu_timesheet.
+**        ENDIF.
+**
+**      ENDLOOP.
+*
+*    ENDLOOP.
+*
+*    CHECK keys_with_valid_fields IS NOT INITIAL.
+*
+*    READ ENTITIES OF yhrm_mu_department
+*    IN LOCAL MODE
+*    ENTITY yhrm_mu_employee by \_Timesheet
+*    FIELDS ( Empid Ydate ApprovedBy Available Leavetype OvertimeHrs Workinghours )
+*    WITH CORRESPONDING #( keys_with_valid_fields )
+*    RESULT data(timesheets).
+*
+*
+*    LOOP AT timesheets ASSIGNING FIELD-SYMBOL(<timesheet>).
+*
+*        APPEND VALUE #(
+*            %tky = <timesheet>-%tky
+*            EmpId = <timesheet>-Empid
+*            Ydate = <timesheet>-Ydate
+*            ApprovedBy = <timesheet>-ApprovedBy
+*            Available = <timesheet>-Available
+*            Leavetype = <timesheet>-Leavetype
+*            OvertimeHrs = <timesheet>-OvertimeHrs
+*            Workinghours = <timesheet>-Workinghours
+*         ) to employee_timesheet.
+*
+*    ENDLOOP.
+*
+*    MODIFY ENTITIES OF yhrm_mu_department
+*    IN LOCAL MODE
+*    ENTITY yhrm_mu_timesheet
+*    UPDATE FIELDS ( ApprovedBy Available Leavetype OvertimeHrs Workinghours Ydate )
+*    WITH employee_timesheet.
+*
+*    READ ENTITIES OF yhrm_mu_department
+*    IN LOCAL MODE
+*    ENTITY yhrm_mu_timesheet
+*    ALL FIELDS WITH
+*    CORRESPONDING #( timesheets )
+*    RESULT DATA(timesheet_created).
+*
+*    result = VALUE #( for timesheet In timesheet_created ( %tky = timesheet-%tky
+*                                                           %param = timesheet
+*                                                            ) ).
+*
+*  ENDMETHOD.
+
+*  METHOD createTimesheet.
+*  ENDMETHOD.
+
+ENDCLASS.
+
+*"* use this source file for the definition and implementation of
+*"* local helper classes, interface definitions and type
+*"* declarations

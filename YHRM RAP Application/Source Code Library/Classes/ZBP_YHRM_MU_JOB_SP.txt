@@ -1,0 +1,158 @@
+CLASS zbp_yhrm_mu_job_sp DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF yhrm_mu_department.
+ENDCLASS.
+
+CLASS zbp_yhrm_mu_job_sp IMPLEMENTATION.
+ENDCLASS.
+
+
+
+==========LOCAL TYPES=========
+CLASS lhc_yhrm_mu_job DEFINITION INHERITING FROM cl_abap_behavior_handler.
+
+  PRIVATE SECTION.
+
+    METHODS earlynumbering_cba_employee FOR NUMBERING
+      IMPORTING entities FOR CREATE yhrm_mu_job\_employee.
+
+    METHODS get_next_employee_id
+      EXPORTING rv_empid TYPE yhrm_emp_id.
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR YHRM_MU_JOB RESULT result.
+    METHODS validatetitle FOR VALIDATE ON SAVE
+      IMPORTING keys FOR yhrm_mu_job~validatetitle.
+
+ENDCLASS.
+
+CLASS lhc_yhrm_mu_job IMPLEMENTATION.
+
+  METHOD get_next_employee_id.
+
+    DATA: lv_max_employeeid  TYPE yhrm_employee-emp_id,
+          lv_emp_number      TYPE i,
+          lv_new_empid       TYPE yhrm_employee-emp_id,
+          lv_emp_number_char TYPE c LENGTH 4.
+
+    SELECT emp_id FROM yhrm_employee ORDER BY emp_id DESCENDING INTO @lv_max_employeeid UP TO 1 ROWS.
+    ENDSELECT.
+
+    lv_emp_number = CONV i( lv_max_employeeid+3(4) ).
+    lv_emp_number = lv_emp_number + 1.
+    lv_emp_number_char = CONV #( lv_emp_number ).
+    IF strlen( lv_emp_number_char ) = 1.
+      CONCATENATE 'EMP000' lv_emp_number_char INTO lv_new_empid.
+    ELSEIF strlen( lv_emp_number_char ) = 2.
+      CONCATENATE 'EMP00' lv_emp_number_char INTO lv_new_empid.
+    ELSEIF strlen( lv_emp_number_char ) = 3.
+      CONCATENATE 'EMP0' lv_emp_number_char INTO lv_new_empid.
+    ELSEIF strlen( lv_emp_number_char ) = 4.
+      CONCATENATE 'EMP' lv_emp_number_char INTO lv_new_empid.
+    ELSE.
+      " Handle the error or warning here
+    ENDIF.
+
+    rv_empid = lv_new_empid.
+
+  ENDMETHOD.
+
+
+  METHOD earlynumbering_cba_employee.
+
+    DATA : lv_new_empid TYPE yhrm_emp_id.
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_job BY \_Employee
+    FROM CORRESPONDING #( entities )
+    RESULT DATA(lt_link_data).
+
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_group_entity>)
+                               GROUP BY <ls_group_entity>-JobId.
+
+      get_next_employee_id(
+          IMPORTING rv_empid = lv_new_empid
+      ).
+
+      LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_entities>) USING KEY entity
+                WHERE JobId = <ls_group_entity>-JobId.
+
+        LOOP AT <ls_entities>-%target ASSIGNING FIELD-SYMBOL(<ls_employee>).
+
+          IF <ls_employee>-EmpId IS INITIAL.
+
+            APPEND CORRESPONDING #( <ls_employee> ) TO  mapped-yhrm_mu_employee
+                    ASSIGNING FIELD-SYMBOL(<ls_new_map_employee>).
+
+            <ls_new_map_employee>-EmpId = lv_new_empid.
+
+          ENDIF.
+
+        ENDLOOP.
+
+      ENDLOOP.
+
+    ENDLOOP.
+
+
+  ENDMETHOD.
+
+
+  METHOD get_instance_features.
+
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_job by \_Employee
+*    ENTITY yhrm_mu_employee
+    FIELDS ( Gender )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_emp).
+
+
+
+    result = VALUE #( for ls_emp in lt_emp
+                    ( %tky = ls_emp-%tky
+*                      %features-%assoc-_Employee = Cond #( when ls_emp-Gender = 'F'
+*                                                            then  if_abap_behv=>fc-o-enabled
+*                                                            ELSE  if_abap_behv=>fc-o-disabled
+*                                                 )
+
+                    )
+     ).
+
+  ENDMETHOD.
+
+  METHOD validateTitle.
+  READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_job
+    FIELDS ( JobTitle )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_job).
+
+    LOOP AT lt_job ASSIGNING FIELD-SYMBOL(<ls_job>).
+
+      IF <ls_job>-JobTitle IS INITIAL.
+
+        APPEND VALUE #( %tky = <ls_job>-%tky )
+            TO failed-yhrm_mu_job.
+        APPEND VALUE #( %tky = <ls_job>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Job Title is mandatory!'
+                              )
+                        %element-JobTitle = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_job.
+      ENDIF.
+
+
+    ENDLOOP.
+
+
+  ENDMETHOD.
+ENDCLASS.
+
+
+*"* use this source file for the definition and implementation of
+*"* local helper classes, interface definitions and type
+*"* declarations

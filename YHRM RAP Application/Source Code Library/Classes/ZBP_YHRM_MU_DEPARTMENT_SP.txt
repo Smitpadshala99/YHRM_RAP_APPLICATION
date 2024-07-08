@@ -1,0 +1,588 @@
+CLASS zbp_yhrm_mu_department_sp DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF yhrm_mu_department.
+ENDCLASS.
+
+CLASS zbp_yhrm_mu_department_sp IMPLEMENTATION.
+ENDCLASS.
+
+
+===========local types=======
+CLASS lsc_yhrm_mu_department DEFINITION INHERITING FROM cl_abap_behavior_saver.
+
+  PROTECTED SECTION.
+
+    METHODS save_modified REDEFINITION.
+
+ENDCLASS.
+
+CLASS lsc_yhrm_mu_department IMPLEMENTATION.
+
+  METHOD save_modified.
+
+    DATA: lt_department_log TYPE STANDARD TABLE OF yhrm_mu_log.
+    DATA: lt_department_log_c TYPE STANDARD TABLE OF yhrm_mu_log. "for create
+    DATA: lt_department_log_u TYPE STANDARD TABLE OF yhrm_mu_log. "for update
+    DATA: lt_department_log_d TYPE STANDARD TABLE OF yhrm_mu_log. "for delete
+
+
+    IF create-yhrm_mu_department IS NOT INITIAL.
+
+      lt_department_log = CORRESPONDING #( create-yhrm_mu_department ).
+
+      LOOP AT lt_department_log ASSIGNING FIELD-SYMBOL(<ls_department_log>).
+
+        <ls_department_log>-changing_operation = 'CREATE'.
+        GET TIME STAMP FIELD <ls_department_log>-created_at.
+        <ls_department_log>-client = sy-mandt.
+
+        READ TABLE create-yhrm_mu_department ASSIGNING FIELD-SYMBOL(<ls_department>)
+                                             WITH TABLE KEY entity
+                                             COMPONENTS departmentid = <ls_department_log>-departmentid.
+
+        IF sy-subrc IS INITIAL.
+
+          IF <ls_department>-%control-departmentname = cl_abap_behv=>flag_changed.
+            <ls_department_log>-changed_field = 'DepartmentName'.
+            <ls_department_log>-changed_value = <ls_department>-departmentname.
+            TRY.
+                <ls_department_log>-change_id = cl_system_uuid=>create_uuid_x16_static(  ).
+              CATCH cx_uuid_error.
+                "handle exception
+            ENDTRY.
+
+            APPEND <ls_department_log> TO lt_department_log_c.
+          ENDIF.
+          IF <ls_department>-%control-addressid = cl_abap_behv=>flag_changed.
+            <ls_department_log>-changed_field = 'AddressId'.
+            <ls_department_log>-changed_value = <ls_department>-addressid.
+            TRY.
+                <ls_department_log>-change_id = cl_system_uuid=>create_uuid_x16_static(  ).
+              CATCH cx_uuid_error.
+                "handle exception
+            ENDTRY.
+
+            APPEND <ls_department_log> TO lt_department_log_c.
+          ENDIF.
+          IF <ls_department>-%control-hod = cl_abap_behv=>flag_changed.
+            <ls_department_log>-changed_field = 'Hod'.
+            <ls_department_log>-changed_value = <ls_department>-hod.
+            TRY.
+                <ls_department_log>-change_id = cl_system_uuid=>create_uuid_x16_static(  ).
+              CATCH cx_uuid_error.
+                "handle exception
+            ENDTRY.
+
+            APPEND <ls_department_log> TO lt_department_log_c.
+          ENDIF.
+        ENDIF.
+      ENDLOOP.
+
+      INSERT yhrm_mu_log FROM TABLE @lt_department_log_c.
+
+    ENDIF.
+
+
+    IF update-yhrm_mu_department IS NOT INITIAL.
+      lt_department_log = CORRESPONDING #( update-yhrm_mu_department ).
+
+      LOOP AT update-yhrm_mu_department ASSIGNING FIELD-SYMBOL(<ls_department_log_u>).
+        ASSIGN lt_department_log[ departmentid = <ls_department_log_u>-departmentid ] TO FIELD-SYMBOL(<ls_log_u>).
+        <ls_log_u>-changing_operation = 'UPDATE'.
+        GET TIME STAMP FIELD <ls_log_u>-created_at.
+        <ls_log_u>-client = sy-mandt.
+
+        IF <ls_department_log_u>-%control-departmentname = cl_abap_behv=>flag_changed.
+          <ls_log_u>-changed_field = 'DepartmentName'.
+          <ls_log_u>-changed_value = <ls_department_log_u>-departmentname.
+          TRY.
+              <ls_log_u>-change_id = cl_system_uuid=>create_uuid_x16_static(  ).
+            CATCH cx_uuid_error.
+              "handle exception
+          ENDTRY.
+
+          APPEND <ls_log_u> TO lt_department_log_u.
+        ENDIF.
+        IF <ls_department_log_u>-%control-addressid = cl_abap_behv=>flag_changed.
+          <ls_log_u>-changed_field = 'AddressId'.
+          <ls_log_u>-changed_value = <ls_department_log_u>-addressid.
+          TRY.
+              <ls_log_u>-change_id = cl_system_uuid=>create_uuid_x16_static(  ).
+            CATCH cx_uuid_error.
+              "handle exception
+          ENDTRY.
+
+          APPEND <ls_log_u> TO lt_department_log_u.
+        ENDIF.
+        IF <ls_department_log_u>-%control-hod = cl_abap_behv=>flag_changed.
+          <ls_log_u>-changed_field = 'Hod'.
+          <ls_log_u>-changed_value = <ls_department_log_u>-hod.
+          TRY.
+              <ls_log_u>-change_id = cl_system_uuid=>create_uuid_x16_static(  ).
+            CATCH cx_uuid_error.
+              "handle exception
+          ENDTRY.
+
+          APPEND <ls_log_u> TO lt_department_log_u.
+        ENDIF.
+
+      ENDLOOP.
+
+      INSERT yhrm_mu_log FROM TABLE @lt_department_log_u.
+
+    ENDIF.
+
+
+    IF delete-yhrm_mu_department IS NOT INITIAL.
+
+      lt_department_log = CORRESPONDING #( delete-yhrm_mu_department ).
+      LOOP AT lt_department_log ASSIGNING FIELD-SYMBOL(<ls_log_d>).
+        <ls_log_d>-changing_operation = 'DELETE'.
+        GET TIME STAMP FIELD <ls_log_d>-created_at.
+        <ls_log_d>-client = sy-mandt.
+        TRY.
+            <ls_log_d>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+          CATCH cx_uuid_error.
+            "handle exception
+        ENDTRY.
+
+      ENDLOOP.
+      INSERT yhrm_mu_log FROM TABLE @lt_department_log.
+    ENDIF.
+
+    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    "With Unmanaged Save
+    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    DATA: lt_employee TYPE STANDARD TABLE OF yhrm_employee.
+
+    IF create-yhrm_mu_employee IS NOT INITIAL.
+*    "it will not work because fields name are different
+*        lt_employee = CORRESPONDING #( create-yhrm_mu_employee ).
+
+      lt_employee = VALUE #( FOR ls_employee IN create-yhrm_mu_employee (
+               emp_id = ls_employee-empid
+               active = ls_employee-active
+               address_id = ls_employee-addressid
+               department_id = ls_employee-departmentid
+               dob = ls_employee-dob
+               email = ls_employee-email
+               first_name = ls_employee-firstname
+               gender = ls_employee-gender
+               hire_date = ls_employee-hiredate
+               job_id = ls_employee-jobid
+               last_name = ls_employee-LastName
+               phone_no = ls_employee-PhoneNo
+               resign_date = ls_employee-ResignDate
+               salary = ls_employee-Salary
+               supervisor_id = ls_employee-SupervisorId
+               last_changed_at = ls_employee-LastChangedAt
+       ) ).
+
+
+      INSERT yhrm_employee FROM TABLE @lt_employee.
+    ENDIF.
+
+    IF update-yhrm_mu_employee IS NOT INITIAL.
+       lt_employee = VALUE #( FOR ls_employee_u IN update-yhrm_mu_employee (
+               emp_id = ls_employee_u-empid
+               active = ls_employee_u-active
+               address_id = ls_employee_u-addressid
+               department_id = ls_employee_u-departmentid
+               dob = ls_employee_u-dob
+               email = ls_employee_u-email
+               first_name = ls_employee_u-firstname
+               gender = ls_employee_u-gender
+               hire_date = ls_employee_u-hiredate
+               job_id = ls_employee_u-jobid
+               last_name = ls_employee_u-LastName
+               phone_no = ls_employee_u-PhoneNo
+               resign_date = ls_employee_u-ResignDate
+               salary = ls_employee_u-Salary
+               supervisor_id = ls_employee_u-SupervisorId
+               last_changed_at = ls_employee_u-LastChangedAt
+       ) ).
+
+      UPDATE yhrm_employee FROM TABLE @lt_employee.
+
+    ENDIF.
+
+    IF delete-yhrm_mu_employee IS NOT INITIAL.
+       lt_employee = VALUE #( FOR ls_employee_d IN delete-yhrm_mu_employee (
+               emp_id = ls_employee_d-empid
+       ) ).
+
+        DELETE yhrm_employee FROM TABLE @lt_employee.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+CLASS lhc_yhrm_mu_department DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PRIVATE SECTION.
+
+    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+      IMPORTING keys REQUEST requested_authorizations FOR yhrm_mu_department RESULT result.
+
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR yhrm_mu_department RESULT result.
+
+    METHODS validateaddress FOR VALIDATE ON SAVE
+      IMPORTING keys FOR yhrm_mu_department~validateaddress.
+
+    METHODS validatehod FOR VALIDATE ON SAVE
+      IMPORTING keys FOR yhrm_mu_department~validatehod.
+    METHODS validatename FOR VALIDATE ON SAVE
+      IMPORTING keys FOR yhrm_mu_department~validatename.
+
+    METHODS earlynumbering_cba_job FOR NUMBERING
+      IMPORTING entities FOR CREATE yhrm_mu_department\_job.
+
+    METHODS earlynumbering_create FOR NUMBERING
+      IMPORTING entities FOR CREATE yhrm_mu_department.
+
+    METHODS get_next_department_id
+      EXPORTING rv_deptid TYPE yhrm_department_id.
+
+    METHODS get_next_job_id
+      EXPORTING rv_jobid TYPE yhrm_job_id.
+
+    METHODS get_next_address_id
+      EXPORTING rv_addressid TYPE yhrm_address_id.
+
+ENDCLASS.
+
+CLASS lhc_yhrm_mu_department IMPLEMENTATION.
+
+  METHOD get_instance_authorizations.
+
+  ENDMETHOD.
+
+  METHOD get_next_department_id.
+
+    DATA: lv_max_departmentid TYPE yhrm_depart_new-department_id,
+          lv_dept_number      TYPE i,
+          lv_new_deptid       TYPE yhrm_depart_new-department_id,
+          lv_dept_number_char TYPE c LENGTH 2.
+
+    SELECT department_id FROM yhrm_depart_new ORDER BY department_id DESCENDING INTO @lv_max_departmentid UP TO 1 ROWS.
+    ENDSELECT.
+
+    lv_dept_number = CONV i( lv_max_departmentid+1(2) ).
+    lv_dept_number = lv_dept_number + 1.
+    lv_dept_number_char = CONV #( lv_dept_number ).
+    IF strlen( lv_dept_number_char ) = 1.
+      CONCATENATE 'D0' lv_dept_number_char INTO lv_new_deptid.
+    ELSEIF strlen( lv_dept_number_char ) = 2.
+      CONCATENATE 'D' lv_dept_number_char INTO lv_new_deptid.
+    ELSE.
+      " Handle the error or warning here
+    ENDIF.
+
+    rv_deptid = lv_new_deptid.
+
+  ENDMETHOD.
+
+  METHOD get_next_address_id.
+    DATA: lv_max_addressid       TYPE yhrm_address-address_id,
+          lv_address_number      TYPE i,
+          lv_new_addressid       TYPE yhrm_address-address_id,
+          lv_address_number_char TYPE c LENGTH 4.
+
+    SELECT address_id FROM yhrm_address ORDER BY address_id DESCENDING INTO @lv_max_addressid UP TO 1 ROWS.
+    ENDSELECT.
+
+    lv_address_number = CONV i( lv_max_addressid+1(4) ).
+    lv_address_number = lv_address_number + 1.
+    lv_address_number_char = CONV #( lv_address_number ).
+    IF strlen( lv_address_number_char ) = 1.
+      CONCATENATE 'A000' lv_address_number_char INTO lv_new_addressid.
+    ELSEIF strlen( lv_address_number_char ) = 2.
+      CONCATENATE 'A00' lv_address_number_char INTO lv_new_addressid.
+    ELSEIF strlen( lv_address_number_char ) = 3.
+      CONCATENATE 'A0' lv_address_number_char INTO lv_new_addressid.
+    ELSEIF strlen( lv_address_number_char ) = 4.
+      CONCATENATE 'A' lv_address_number_char INTO lv_new_addressid.
+    ELSE.
+      " Handle the error or warning here
+    ENDIF.
+
+    rv_addressid = lv_new_addressid.
+
+  ENDMETHOD.
+
+  METHOD earlynumbering_create.
+
+    TRY.
+        DATA(lt_entities) = entities.
+        DATA: lv_new_deptid TYPE yhrm_depart_new-department_id,
+              lv_addressid  TYPE yhrm_address-address_id,
+              ls_address    TYPE yhrm_address.
+
+
+        get_next_department_id(
+            IMPORTING rv_deptid = lv_new_deptid
+         ).
+
+*        LOOP AT lt_entities ASSIGNING FIELD-SYMBOL(<ls_entity>).
+*          " Check if address id exists in the database
+*          SELECT SINGLE address_id FROM yhrm_address WHERE address_id = @<ls_entity>-addressid INTO @lv_addressid.
+*          IF sy-subrc <> 0.
+*            " If address id does not exist, generate a new one
+*            get_next_address_id(
+*                IMPORTING rv_addressid = lv_addressid
+*             ).
+*
+*            <ls_entity>-addressid = lv_addressid.
+*            ls_address-client = sy-mandt.
+*            ls_address-address_id = <ls_entity>-addressid.
+*            ls_address-street_add1 = <ls_entity>-streetadd1.
+*            ls_address-street_add2 = <ls_entity>-streetadd2.
+*            ls_address-street_add3 = <ls_entity>-streetadd3.
+*            ls_address-pin_code = <ls_entity>-pincode.
+*            ls_address-city = <ls_entity>-city.
+*            ls_address-state = <ls_entity>-state.
+*            ls_address-country = <ls_entity>-country.
+*            " Insert the new address details into the database
+*            INSERT INTO yhrm_address VALUES @ls_address.
+*          ELSE.
+*            " If address id exists, update the address details in the database
+*            UPDATE yhrm_address SET street_add1 = @<ls_entity>-streetadd1,
+*                                    street_add2 = @<ls_entity>-streetadd2,
+*                                    street_add3 = @<ls_entity>-streetadd3,
+*                                    pin_code = @<ls_entity>-pincode,
+*                                    city = @<ls_entity>-city,
+*                                    state = @<ls_entity>-state,
+*                                    country = @<ls_entity>-country
+*                                    WHERE address_id = @lv_addressid.
+*          ENDIF.
+*        ENDLOOP.
+
+      CATCH cx_nr_object_not_found.
+      CATCH cx_number_ranges INTO DATA(lo_error).
+        LOOP AT lt_entities  INTO DATA(ls_entities).
+          APPEND VALUE #( %cid =  ls_entities-%cid
+                          %key = ls_entities-%key  )
+                 TO failed-yhrm_mu_department.
+          APPEND VALUE #( %cid =  ls_entities-%cid
+                          %key = ls_entities-%key
+                          %msg =  lo_error )
+                 TO reported-yhrm_mu_department.
+
+        ENDLOOP.
+    ENDTRY.
+
+
+    LOOP AT lt_entities INTO ls_entities.
+      APPEND VALUE #(
+          %cid = ls_entities-%cid
+          departmentid = lv_new_deptid
+       ) TO mapped-yhrm_mu_department.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD get_next_job_id.
+
+    DATA: lv_max_jobid       TYPE yhrm_job-job_id,
+          lv_job_number      TYPE i,
+          lv_new_jobid       TYPE yhrm_job-job_id,
+          lv_job_number_char TYPE c LENGTH 2.
+
+    SELECT job_id FROM yhrm_job ORDER BY job_id DESCENDING INTO @lv_max_jobid UP TO 1 ROWS.
+    ENDSELECT.
+
+    lv_job_number = CONV i( lv_max_jobid+1(2) ).
+    lv_job_number = lv_job_number + 1.
+    lv_job_number_char = CONV #( lv_job_number ).
+    IF strlen( lv_job_number_char ) = 1.
+      CONCATENATE 'J0' lv_job_number_char INTO lv_new_jobid.
+    ELSEIF strlen( lv_job_number_char ) = 2.
+      CONCATENATE 'J' lv_job_number_char INTO lv_new_jobid.
+    ELSE.
+      " Handle the error or warning here
+    ENDIF.
+
+    rv_jobid = lv_new_jobid.
+
+  ENDMETHOD.
+
+
+  METHOD earlynumbering_cba_job.
+
+    DATA : lv_new_jobid TYPE yhrm_job_id.
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_department BY \_job
+    FROM CORRESPONDING #( entities )
+    RESULT DATA(lt_link_data).
+
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_group_entity>)
+                               GROUP BY <ls_group_entity>-departmentid.
+
+      get_next_job_id(
+          IMPORTING rv_jobid = lv_new_jobid
+      ).
+
+      LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_entities>) USING KEY entity
+                WHERE departmentid = <ls_group_entity>-departmentid.
+
+        LOOP AT <ls_entities>-%target ASSIGNING FIELD-SYMBOL(<ls_job>).
+
+          IF <ls_job>-jobid IS INITIAL.
+
+            APPEND CORRESPONDING #( <ls_job> ) TO  mapped-yhrm_mu_job
+                    ASSIGNING FIELD-SYMBOL(<ls_new_map_job>).
+
+            <ls_new_map_job>-jobid = lv_new_jobid.
+
+          ENDIF.
+        ENDLOOP.
+
+      ENDLOOP.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD get_instance_features.
+
+    READ ENTITIES OF yhrm_mu_department
+    IN LOCAL MODE
+    ENTITY yhrm_mu_department
+    FIELDS ( departmentid departmentname addressid hod )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_department).
+
+    result = VALUE #( FOR ls_department IN lt_department
+                    ( %tky = ls_department-%tky
+
+                    )
+     ).
+
+
+  ENDMETHOD.
+
+  METHOD validateaddress.
+
+    READ ENTITY IN LOCAL MODE yhrm_mu_department
+    FIELDS ( addressid )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_department).
+
+    DATA: lt_add TYPE SORTED TABLE OF yhrm_address WITH UNIQUE KEY address_id.
+
+    lt_add = CORRESPONDING #( lt_department DISCARDING DUPLICATES MAPPING address_id = addressid ).
+    DELETE lt_add WHERE address_id IS INITIAL.
+
+    SELECT FROM yhrm_address FIELDS address_id
+    FOR ALL ENTRIES IN @lt_add
+    WHERE address_id = @lt_add-address_id
+    INTO TABLE @DATA(lt_add_db).
+
+    IF sy-subrc IS INITIAL.
+
+    ENDIF.
+
+    LOOP AT lt_department ASSIGNING FIELD-SYMBOL(<ls_department>).
+
+      IF <ls_department>-addressid IS INITIAL
+          OR NOT line_exists( lt_add_db[ address_id = <ls_department>-addressid ] ).
+
+
+        APPEND VALUE #( %tky = <ls_department>-%tky )
+            TO failed-yhrm_mu_department.
+        APPEND VALUE #( %tky = <ls_department>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'AddressId not exists, Select a valid AddressId.'
+                              )
+                        %element-addressid = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_department.
+      ENDIF.
+
+    ENDLOOP.
+
+
+  ENDMETHOD.
+
+  METHOD validatehod.
+
+    READ ENTITY IN LOCAL MODE yhrm_mu_department
+      FIELDS ( hod )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_department).
+
+    DATA: lt_hod TYPE SORTED TABLE OF yhrm_employee WITH UNIQUE KEY emp_id.
+
+    lt_hod = CORRESPONDING #( lt_department DISCARDING DUPLICATES MAPPING emp_id = hod ).
+    DELETE lt_hod WHERE emp_id IS INITIAL.
+
+    SELECT FROM yhrm_employee FIELDS emp_id, active
+    FOR ALL ENTRIES IN @lt_hod
+    WHERE emp_id = @lt_hod-emp_id
+    INTO TABLE @DATA(lt_hod_db).
+
+    IF sy-subrc IS INITIAL.
+
+    ENDIF.
+
+    LOOP AT lt_department ASSIGNING FIELD-SYMBOL(<ls_department>).
+
+      IF <ls_department>-hod IS INITIAL
+          OR NOT ( line_exists( lt_hod_db[ emp_id = <ls_department>-hod ] )
+          AND line_exists( lt_hod_db[ active = 'X' ] ) ).
+
+        APPEND VALUE #( %tky = <ls_department>-%tky )
+            TO failed-yhrm_mu_department.
+        APPEND VALUE #( %tky = <ls_department>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'HOD not exists or is not active, Select a valid and active Head of Department.'
+                              )
+                        %element-hod = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_department.
+      ENDIF.
+
+
+    ENDLOOP.
+
+
+
+  ENDMETHOD.
+
+  METHOD validatename.
+    READ ENTITY IN LOCAL MODE yhrm_mu_department
+      FIELDS ( hod )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_department).
+
+    LOOP AT lt_department ASSIGNING FIELD-SYMBOL(<ls_department>).
+
+      IF <ls_department>-departmentname IS INITIAL.
+
+        APPEND VALUE #( %tky = <ls_department>-%tky )
+            TO failed-yhrm_mu_department.
+        APPEND VALUE #( %tky = <ls_department>-%tky
+                        %msg = new_message_with_text(
+                              severity = if_abap_behv_message=>severity-error
+                              text = 'Department Name is mandatory!'
+                              )
+                        %element-departmentname = if_abap_behv=>mk-on
+
+            ) TO reported-yhrm_mu_department.
+      ENDIF.
+
+
+    ENDLOOP.
+
+
+  ENDMETHOD.
+
+ENDCLASS.

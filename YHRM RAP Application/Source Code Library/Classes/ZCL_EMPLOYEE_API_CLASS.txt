@@ -8,7 +8,7 @@ CLASS zcl_employee_api_class DEFINITION
     DATA:
           gt_employee TYPE STANDARD TABLE OF yhrm_employee,
           gt_timesheet TYPE STANDARD TABLE OF yhrm_timesheet,
-          gt_department TYPE STANDARD TABLE OF yhrm_department,
+          gt_department TYPE STANDARD TABLE OF yhrm_depart_new,
           gt_address TYPE STANDARD TABLE OF yhrm_address,
           gt_job TYPE STANDARD TABLE OF yhrm_job.
 
@@ -406,10 +406,6 @@ CLASS zcl_employee_api_class IMPLEMENTATION.
 
                 )
      ).
-
-
-
-
 
   ENDMETHOD.
 
