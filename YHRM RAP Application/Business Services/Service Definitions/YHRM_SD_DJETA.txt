@@ -1,0 +1,7 @@
+@EndUserText.label: 'SD for Depart, Job, Emp, Time, Add'
+define service YHRM_SD_DJETA {
+  expose YHRM_MU_DEPARTMENT_PROJ;
+  expose YHRM_MU_EMPLOYEE_PROJ;
+  expose YHRM_MU_JOB_PROJ;
+  expose YHRM_MU_TIMESHEET_PROJ;
+}

@@ -1,0 +1,6 @@
+@EndUserText.label: 'Service Definition for Department & Employee'
+define service ZSP_DEPARTMENT_EMP_SD {
+  expose ZSP_Department;
+  expose ZSP_C_EMPLOYEE_FEMALE_DOY2002;
+  expose ZSP_EMPLOYEE;
+}

@@ -1,0 +1,4 @@
+@EndUserText.label: 'Service Definition for URL'
+define service Yhrm_SD_i_url {
+  expose yhrm_i_url;
+}
